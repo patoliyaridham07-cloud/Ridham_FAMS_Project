@@ -1,0 +1,508 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fb;
+    color: #172033;
+    line-height: 1.6;
+}
+
+
+/* ================= HEADER ================= */
+
+header {
+    background: #ffffff;
+    padding: 18px 8%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+nav a {
+    text-decoration: none;
+    color: #172033;
+    margin-left: 25px;
+    font-weight: 600;
+}
+
+nav a:hover {
+    color: #2563eb;
+}
+
+
+/* ================= HERO ================= */
+
+.hero {
+    min-height: 430px;
+    padding: 70px 8%;
+    display: flex;
+    align-items: center;
+    background:
+        linear-gradient(
+            135deg,
+            #dbeafe,
+            #eef2ff,
+            #f8fafc
+        );
+}
+
+.hero-content {
+    max-width: 800px;
+}
+
+.tag,
+.section-title span {
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.hero h1 {
+    font-size: 48px;
+    line-height: 1.15;
+    margin: 15px 0;
+}
+
+.hero h1 span {
+    color: #2563eb;
+}
+
+.hero p {
+    max-width: 650px;
+    font-size: 18px;
+    margin-bottom: 30px;
+    color: #526075;
+}
+
+.main-btn {
+    display: inline-block;
+    padding: 13px 24px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.main-btn:hover {
+    background: #1d4ed8;
+}
+
+
+/* ================= CONTAINER ================= */
+
+.container {
+    width: 84%;
+    max-width: 1150px;
+    margin: 65px auto;
+}
+
+.section-title {
+    margin-bottom: 30px;
+}
+
+.section-title h2 {
+    font-size: 32px;
+    margin: 5px 0;
+}
+
+.section-title p {
+    color: #667085;
+}
+
+
+/* ================= DASHBOARD ================= */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(4, 1fr);
+    gap: 18px;
+}
+
+.dashboard-card {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    box-shadow:
+        0 4px 20px rgba(0,0,0,0.06);
+}
+
+.card-icon {
+    font-size: 30px;
+}
+
+.dashboard-card h3 {
+    color: #2563eb;
+    font-size: 30px;
+}
+
+.dashboard-card p {
+    color: #667085;
+}
+
+
+/* ================= FORM ================= */
+
+form {
+    background: white;
+    padding: 35px;
+    border-radius: 16px;
+    box-shadow:
+        0 5px 25px rgba(0,0,0,0.07);
+}
+
+.form-section {
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section h3 {
+    margin-bottom: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(2, 1fr);
+    gap: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    background: white;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #2563eb;
+}
+
+textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+
+/* ================= PDF UPLOAD ================= */
+
+.upload-box {
+    border: 2px dashed #93c5fd;
+    border-radius: 12px;
+    padding: 35px;
+    text-align: center;
+    background: #eff6ff;
+}
+
+.upload-box input {
+    display: none;
+}
+
+.upload-box label {
+    cursor: pointer;
+    display: block;
+}
+
+.upload-icon {
+    font-size: 45px;
+    margin-bottom: 10px;
+}
+
+.upload-box strong {
+    display: block;
+    font-size: 17px;
+}
+
+.upload-box small {
+    display: block;
+    color: #667085;
+    margin-top: 5px;
+}
+
+.file-name {
+    margin-top: 10px;
+    color: #2563eb;
+    font-weight: bold;
+}
+
+
+/* ================= QUESTIONS ================= */
+
+.question-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.question-heading p {
+    color: #667085;
+}
+
+.add-question {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.question-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.question-number {
+    min-width: 35px;
+    font-weight: bold;
+}
+
+.question-input {
+    flex: 1;
+}
+
+.remove-question {
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 7px;
+    background: #fee2e2;
+    color: #dc2626;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+
+/* ================= BUTTONS ================= */
+
+.form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.cancel-btn,
+.submit-btn {
+    padding: 13px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.cancel-btn {
+    background: #e5e7eb;
+}
+
+.submit-btn {
+    background: #2563eb;
+    color: white;
+}
+
+.submit-btn:hover {
+    background: #1d4ed8;
+}
+
+
+/* ================= SEARCH ================= */
+
+.search {
+    margin-bottom: 25px;
+    font-size: 16px;
+}
+
+
+/* ================= ASSIGNMENT CARD ================= */
+
+.assignment-card {
+    background: white;
+    padding: 25px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    box-shadow:
+        0 4px 18px rgba(0,0,0,0.07);
+}
+
+.assignment-card h3 {
+    font-size: 23px;
+    color: #1e3a8a;
+}
+
+.assignment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.badge {
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+.assignment-description {
+    margin: 15px 0;
+}
+
+.questions-list {
+    background: #f8fafc;
+    padding: 18px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.questions-list li {
+    margin: 8px 0;
+    margin-left: 20px;
+}
+
+.pdf-link {
+    display: inline-block;
+    margin-top: 15px;
+    color: #2563eb;
+    font-weight: bold;
+}
+
+.status {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: #fef3c7;
+    color: #92400e;
+    margin-top: 15px;
+}
+
+.completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.assignment-actions {
+    margin-top: 15px;
+}
+
+.complete-btn,
+.delete-btn {
+    border: none;
+    padding: 9px 15px;
+    border-radius: 7px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+.complete-btn {
+    background: #16a34a;
+    color: white;
+}
+
+.delete-btn {
+    background: #dc2626;
+    color: white;
+}
+
+
+/* ================= FOOTER ================= */
+
+footer {
+    background: #172033;
+    color: white;
+    text-align: center;
+    padding: 35px;
+}
+
+footer p {
+    margin: 8px 0;
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 900px) {
+
+    .dashboard-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+    .hero h1 {
+        font-size: 38px;
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    nav a {
+        margin: 5px;
+    }
+
+    .container {
+        width: 92%;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero h1 {
+        font-size: 32px;
+    }
+
+    .question-heading {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+}
