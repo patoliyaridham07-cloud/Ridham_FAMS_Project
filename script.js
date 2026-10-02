@@ -1,682 +1,258 @@
-// ========================================
-// FACULTY ASSIGNMENT MANAGEMENT SYSTEM
-// ========================================
+// Get form
+
+const form = document.getElementById("assignmentForm");
 
 
-// Get existing assignments
+// Get assignment list
+
+const assignmentList = document.getElementById("assignmentList");
+
+
+// Get search box
+
+const search = document.getElementById("search");
+
+
+// Load assignments from localStorage
 
 let assignments =
-    JSON.parse(
-        localStorage.getItem("facultyAssignments")
-    ) || [];
+    JSON.parse(localStorage.getItem("assignments")) || [];
 
 
-// ========================================
-// ADD IMPORTANT QUESTION
-// ========================================
+// Display assignments when page loads
 
-function addQuestion() {
-
-    const container =
-        document.getElementById(
-            "questionContainer"
-        );
-
-    const number =
-        container.children.length + 1;
+displayAssignments(assignments);
 
 
-    const row =
-        document.createElement("div");
+// Create Assignment
 
-    row.className = "question-row";
+form.addEventListener("submit", function(event) {
 
-
-    row.innerHTML = `
-
-        <span class="question-number">
-            Q${number}
-        </span>
-
-        <input
-            type="text"
-            class="question-input"
-            placeholder="Enter important question"
-        >
-
-        <button
-            type="button"
-            class="remove-question"
-            onclick="removeQuestion(this)"
-        >
-            ×
-        </button>
-
-    `;
+    event.preventDefault();
 
 
-    container.appendChild(row);
+    // Get uploaded file
 
-    updateQuestionNumbers();
-}
-
-
-// ========================================
-// REMOVE QUESTION
-// ========================================
-
-function removeQuestion(button) {
-
-    const row =
-        button.parentElement;
-
-    row.remove();
-
-    updateQuestionNumbers();
-}
+    const fileInput =
+        document.getElementById("chapterFile");
 
 
-// ========================================
-// UPDATE QUESTION NUMBERS
-// ========================================
-
-function updateQuestionNumbers() {
-
-    const rows =
-        document.querySelectorAll(
-            ".question-row"
-        );
+    let fileName = "No file uploaded";
 
 
-    rows.forEach(function(row, index) {
+    if (fileInput.files.length > 0) {
 
-        row.querySelector(
-            ".question-number"
-        ).textContent =
-            "Q" + (index + 1);
-
-    });
-}
-
-
-// ========================================
-// PDF FILE
-// ========================================
-
-const pdfFile =
-    document.getElementById("pdfFile");
-
-
-pdfFile.addEventListener(
-    "change",
-    function() {
-
-        const file =
-            this.files[0];
-
-
-        if (!file) {
-
-            document.getElementById(
-                "fileName"
-            ).textContent =
-                "No PDF selected";
-
-            return;
-        }
-
-
-        if (
-            file.type !==
-            "application/pdf"
-        ) {
-
-            alert(
-                "Please select a PDF file only."
-            );
-
-            this.value = "";
-
-            return;
-        }
-
-
-        document.getElementById(
-            "fileName"
-        ).textContent =
-            "Selected PDF: " +
-            file.name;
+        fileName = fileInput.files[0].name;
 
     }
-);
 
 
-// ========================================
-// CREATE ASSIGNMENT
-// ========================================
+    // Create assignment object
 
-const form =
-    document.getElementById(
-        "assignmentForm"
-    );
+    const assignment = {
 
+        id: Date.now(),
 
-form.addEventListener(
-    "submit",
-    function(event) {
+        faculty:
+            document.getElementById("facultyName").value,
 
-        event.preventDefault();
+        program:
+            document.getElementById("program").value,
 
+        semester:
+            document.getElementById("semester").value,
 
-        // Get form values
+        subject:
+            document.getElementById("subject").value,
 
-        const title =
-            document.getElementById(
-                "title"
-            ).value.trim();
+        chapter:
+            document.getElementById("chapter").value,
 
+        title:
+            document.getElementById("title").value,
 
-        const subject =
-            document.getElementById(
-                "subject"
-            ).value;
+        description:
+            document.getElementById("description").value,
 
+        questions:
+            document.getElementById("questions").value,
 
-        const semester =
-            document.getElementById(
-                "semester"
-            ).value;
+        marks:
+            document.getElementById("marks").value,
 
+        dueDate:
+            document.getElementById("dueDate").value,
 
-        const marks =
-            document.getElementById(
-                "marks"
-            ).value;
+        file:
+            fileName,
 
+        important:
+            document.getElementById("important").checked
 
-        const deadline =
-            document.getElementById(
-                "deadline"
-            ).value;
+    };
 
 
-        const faculty =
-            document.getElementById(
-                "faculty"
-            ).value.trim();
+    // Add assignment
 
+    assignments.push(assignment);
 
-        const description =
-            document.getElementById(
-                "description"
-            ).value.trim();
 
-
-        // PDF
-
-        const file =
-            document.getElementById(
-                "pdfFile"
-            ).files[0];
-
-
-        // Get questions
-
-        const questionInputs =
-            document.querySelectorAll(
-                ".question-input"
-            );
-
-
-        const questions = [];
-
-
-        questionInputs.forEach(
-            function(input) {
-
-                const question =
-                    input.value.trim();
-
-
-                if (question !== "") {
-
-                    questions.push(
-                        question
-                    );
-
-                }
-
-            }
-        );
-
-
-        // Validate questions
-
-        if (questions.length === 0) {
-
-            alert(
-                "Please add at least one important question."
-            );
-
-            return;
-        }
-
-
-        // PDF name
-
-        let pdfName = "";
-
-        if (file) {
-
-            pdfName = file.name;
-
-        }
-
-
-        // Create assignment object
-
-        const assignment = {
-
-            id: Date.now(),
-
-            title: title,
-
-            subject: subject,
-
-            semester: semester,
-
-            marks: marks,
-
-            deadline: deadline,
-
-            faculty: faculty,
-
-            description: description,
-
-            pdfName: pdfName,
-
-            questions: questions,
-
-            status: "Pending",
-
-            createdDate:
-                new Date().toLocaleDateString()
-
-        };
-
-
-        // Add assignment
-
-        assignments.push(
-            assignment
-        );
-
-
-        // Save
-
-        saveAssignments();
-
-
-        // Reset form
-
-        form.reset();
-
-
-        document.getElementById(
-            "fileName"
-        ).textContent =
-            "No PDF selected";
-
-
-        // Reset questions
-
-        document.getElementById(
-            "questionContainer"
-        ).innerHTML = `
-
-            <div class="question-row">
-
-                <span class="question-number">
-                    Q1
-                </span>
-
-                <input
-                    type="text"
-                    class="question-input"
-                    placeholder="Enter important question"
-                >
-
-                <button
-                    type="button"
-                    class="remove-question"
-                    onclick="removeQuestion(this)"
-                >
-                    ×
-                </button>
-
-            </div>
-
-        `;
-
-
-        displayAssignments();
-
-
-        alert(
-            "🎉 Assignment published successfully!"
-        );
-
-
-        // Move to assignment section
-
-        document.getElementById(
-            "assignments"
-        ).scrollIntoView();
-
-    }
-);
-
-
-// ========================================
-// SAVE ASSIGNMENTS
-// ========================================
-
-function saveAssignments() {
+    // Save assignment
 
     localStorage.setItem(
-        "facultyAssignments",
+        "assignments",
         JSON.stringify(assignments)
     );
 
-}
+
+    // Display assignments
+
+    displayAssignments(assignments);
 
 
-// ========================================
-// DISPLAY ASSIGNMENTS
-// ========================================
+    // Clear form
 
-function displayAssignments(
-    searchText = ""
-) {
-
-    const list =
-        document.getElementById(
-            "assignmentList"
-        );
+    form.reset();
 
 
-    list.innerHTML = "";
+    // Message
+
+    alert("Assignment created successfully!");
 
 
-    const filtered =
-        assignments.filter(
-            function(assignment) {
+    // Go to assignment section
 
-                return (
+    document.getElementById("assignments")
+        .scrollIntoView({
+            behavior: "smooth"
+        });
 
-                    assignment.title
-                        .toLowerCase()
-                        .includes(
-                            searchText.toLowerCase()
-                        )
-
-                    ||
-
-                    assignment.subject
-                        .toLowerCase()
-                        .includes(
-                            searchText.toLowerCase()
-                        )
-
-                );
-
-            }
-        );
+});
 
 
-    if (filtered.length === 0) {
+// Display Assignments
 
-        list.innerHTML = `
+function displayAssignments(data) {
 
-            <div class="assignment-card">
+    assignmentList.innerHTML = "";
 
-                <h3>
-                    No Assignment Found
-                </h3>
 
-                <p>
-                    Create your first assignment
-                    using the form above.
-                </p>
+    if (data.length === 0) {
 
-            </div>
-
-        `;
-
-        updateDashboard();
+        assignmentList.innerHTML =
+            "<p>No assignments created yet.</p>";
 
         return;
+
     }
 
 
-    filtered.forEach(
-        function(assignment) {
+    data.forEach(function(assignment) {
 
-            const card =
-                document.createElement(
-                    "div"
-                );
+        const card =
+            document.createElement("div");
 
 
-            card.className =
-                "assignment-card";
+        card.className = "assignment-card";
 
 
-            let questionHTML = "";
+        let importantBadge = "";
 
 
-            if (
-                assignment.questions &&
-                assignment.questions.length > 0
-            ) {
+        if (assignment.important) {
 
-                questionHTML = `
-
-                    <div class="questions-list">
-
-                        <strong>
-                            ⭐ Important Questions
-                        </strong>
-
-                        <ol>
-
-                            ${assignment.questions
-                                .map(
-                                    question =>
-                                        `<li>${question}</li>`
-                                )
-                                .join("")}
-
-                        </ol>
-
-                    </div>
-
-                `;
-
-            }
-
-
-            let pdfHTML = "";
-
-
-            if (assignment.pdfName) {
-
-                pdfHTML = `
-
-                    <div class="pdf-link">
-
-                        📄 PDF:
-                        ${assignment.pdfName}
-
-                    </div>
-
-                `;
-
-            }
-
-
-            const statusClass =
-                assignment.status ===
-                "Completed"
-                    ? "status completed"
-                    : "status";
-
-
-            card.innerHTML = `
-
-                <h3>
-                    ${assignment.title}
-                </h3>
-
-
-                <div class="assignment-meta">
-
-                    <span class="badge">
-                        📚 ${assignment.subject}
-                    </span>
-
-                    <span class="badge">
-                        🎓 ${assignment.semester}
-                    </span>
-
-                    <span class="badge">
-                        🎯 ${assignment.marks} Marks
-                    </span>
-
-                    <span class="badge">
-                        📅 ${assignment.deadline}
-                    </span>
-
-                </div>
-
-
-                <p>
-                    <strong>Faculty:</strong>
-                    ${assignment.faculty}
-                </p>
-
-
-                <p class="assignment-description">
-
-                    <strong>Description:</strong>
-
-                    ${assignment.description}
-
-                </p>
-
-
-                ${questionHTML}
-
-                ${pdfHTML}
-
-
-                <br>
-
-
-                <span class="${statusClass}">
-
-                    ${assignment.status}
-
-                </span>
-
-
-                <div class="assignment-actions">
-
-                    <button
-                        class="complete-btn"
-                        onclick="
-                            completeAssignment(
-                                ${assignment.id}
-                            )
-                        "
-                    >
-
-                        ✓ Mark Completed
-
-                    </button>
-
-
-                    <button
-                        class="delete-btn"
-                        onclick="
-                            deleteAssignment(
-                                ${assignment.id}
-                            )
-                        "
-                    >
-
-                        🗑 Delete
-
-                    </button>
-
-                </div>
-
-            `;
-
-
-            list.appendChild(card);
+            importantBadge =
+                `<span class="badge">
+                    ⭐ Important Assignment
+                </span>`;
 
         }
-    );
 
 
-    updateDashboard();
+        card.innerHTML = `
+
+            ${importantBadge}
+
+            <h3>
+                ${assignment.title}
+            </h3>
+
+            <p>
+                <strong>Faculty:</strong>
+                ${assignment.faculty}
+            </p>
+
+            <p>
+                <strong>Program:</strong>
+                ${assignment.program}
+            </p>
+
+            <p>
+                <strong>Semester:</strong>
+                ${assignment.semester}
+            </p>
+
+            <p>
+                <strong>Subject:</strong>
+                ${assignment.subject}
+            </p>
+
+            <p>
+                <strong>Chapter:</strong>
+                ${assignment.chapter}
+            </p>
+
+            <p>
+                <strong>Description:</strong>
+                ${assignment.description}
+            </p>
+
+            <p>
+                <strong>Important Questions:</strong>
+                <br>
+                ${assignment.questions.replace(/\n/g, "<br>")}
+            </p>
+
+            <p>
+                <strong>Total Marks:</strong>
+                ${assignment.marks}
+            </p>
+
+            <p>
+                <strong>Submission Date:</strong>
+                ${assignment.dueDate}
+            </p>
+
+            <div class="file-name">
+
+                📎 <strong>Reference File:</strong>
+                ${assignment.file}
+
+            </div>
+
+            <button
+                class="delete-btn"
+                onclick="deleteAssignment(${assignment.id})"
+            >
+                Delete Assignment
+            </button>
+
+        `;
+
+
+        assignmentList.appendChild(card);
+
+    });
 
 }
 
 
-// ========================================
-// COMPLETE ASSIGNMENT
-// ========================================
-
-function completeAssignment(id) {
-
-    assignments =
-        assignments.map(
-            function(assignment) {
-
-                if (
-                    assignment.id === id
-                ) {
-
-                    assignment.status =
-                        "Completed";
-
-                }
-
-                return assignment;
-
-            }
-        );
-
-
-    saveAssignments();
-
-    displayAssignments();
-
-}
-
-
-// ========================================
-// DELETE ASSIGNMENT
-// ========================================
+// Delete Assignment
 
 function deleteAssignment(id) {
 
     const confirmDelete =
-        confirm(
-            "Are you sure you want to delete this assignment?"
-        );
+        confirm("Are you sure you want to delete this assignment?");
 
 
     if (!confirmDelete) {
@@ -687,111 +263,76 @@ function deleteAssignment(id) {
 
 
     assignments =
-        assignments.filter(
-            function(assignment) {
+        assignments.filter(function(assignment) {
 
-                return assignment.id !== id;
+            return assignment.id !== id;
 
-            }
-        );
+        });
 
 
-    saveAssignments();
+    localStorage.setItem(
+        "assignments",
+        JSON.stringify(assignments)
+    );
 
-    displayAssignments();
+
+    displayAssignments(assignments);
 
 }
 
 
-// ========================================
-// SEARCH
-// ========================================
+// Search Assignment
 
-document
-    .getElementById("search")
-    .addEventListener(
-        "input",
-        function() {
+search.addEventListener("input", function() {
 
-            displayAssignments(
-                this.value
+    const searchText =
+        search.value.toLowerCase();
+
+
+    const filtered =
+        assignments.filter(function(assignment) {
+
+            return (
+
+                assignment.title
+                    .toLowerCase()
+                    .includes(searchText)
+
+                ||
+
+                assignment.subject
+                    .toLowerCase()
+                    .includes(searchText)
+
+                ||
+
+                assignment.program
+                    .toLowerCase()
+                    .includes(searchText)
+
+                ||
+
+                assignment.chapter
+                    .toLowerCase()
+                    .includes(searchText)
+
             );
 
-        }
-    );
+        });
 
 
-// ========================================
-// DASHBOARD
-// ========================================
+    displayAssignments(filtered);
 
-function updateDashboard() {
-
-    const total =
-        assignments.length;
+});
 
 
-    const completed =
-        assignments.filter(
-            function(assignment) {
+// Scroll to Create Assignment
 
-                return (
-                    assignment.status ===
-                    "Completed"
-                );
+function goToCreate() {
 
-            }
-        ).length;
-
-
-    const pending =
-        total - completed;
-
-
-    let questionCount = 0;
-
-
-    assignments.forEach(
-        function(assignment) {
-
-            if (
-                assignment.questions
-            ) {
-
-                questionCount +=
-                    assignment.questions.length;
-
-            }
-
-        }
-    );
-
-
-    document.getElementById(
-        "totalAssignments"
-    ).textContent = total;
-
-
-    document.getElementById(
-        "pendingAssignments"
-    ).textContent = pending;
-
-
-    document.getElementById(
-        "completedAssignments"
-    ).textContent = completed;
-
-
-    document.getElementById(
-        "totalQuestions"
-    ).textContent =
-        questionCount;
+    document.getElementById("create")
+        .scrollIntoView({
+            behavior: "smooth"
+        });
 
 }
-
-
-// ========================================
-// INITIAL LOAD
-// ========================================
-
-displayAssignments();
