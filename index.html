@@ -5,345 +5,707 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GTU Assignment Creator</title>
+    <title>GTU AI Assignment Creator</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- PDF.js: Read text from PDF files -->
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
+        defer>
+    </script>
+
+    <script src="script.js" defer></script>
 </head>
 
 <body>
 
-    <!-- Header -->
-    <header>
-        <div class="logo">
-            🎓 GTU Assignment Creator
-        </div>
+    <!-- ================= LOGIN PAGE ================= -->
 
-        <nav>
-            <a href="#home">Home</a>
-            <a href="#create">Create Assignment</a>
-            <a href="#assignments">Assignments</a>
-        </nav>
-    </header>
+    <section id="loginPage" class="login-page">
 
-
-    <!-- Home Section -->
-    <section id="home" class="hero">
-
-        <div class="hero-content">
-
-            <h1>Faculty Assignment Creator</h1>
-
-            <p>
-                Create and manage assignments for GTU affiliated
-                courses, semesters and subjects.
-            </p>
-
-            <button onclick="goToCreate()">
-                Create Assignment
-            </button>
-
-        </div>
-
-    </section>
-
-
-    <!-- Create Assignment -->
-    <section id="create" class="container">
-
-        <h2>Create New Assignment</h2>
-
-        <form id="assignmentForm">
-
-            <!-- Faculty Name -->
-            <div class="form-group">
-
-                <label>Faculty Name</label>
-
-                <input
-                    type="text"
-                    id="facultyName"
-                    placeholder="Enter faculty name"
-                    required
-                >
-
+        <div class="login-decoration">
+            <div class="login-brand">
+                <span class="brand-icon">🎓</span>
+                <span>GTU AI Creator</span>
             </div>
 
+            <div class="login-message">
+                <span class="eyebrow">SMART EDUCATION PLATFORM</span>
 
-            <!-- Program -->
-            <div class="form-group">
-
-                <label>Program / Course</label>
-
-                <select id="program" required>
-
-                    <option value="">Select Program</option>
-
-                    <option>BCA</option>
-                    <option>Integrated MCA</option>
-                    <option>MCA</option>
-                    <option>B.Tech Computer Engineering</option>
-                    <option>B.Tech IT</option>
-                    <option>B.Tech AI & ML</option>
-                    <option>B.Tech Data Science</option>
-                    <option>BBA</option>
-                    <option>B.Com</option>
-                    <option>MBA</option>
-                    <option>M.Tech</option>
-                    <option>Other</option>
-
-                </select>
-
-            </div>
-
-
-            <!-- Semester -->
-            <div class="form-group">
-
-                <label>Semester</label>
-
-                <select id="semester" required>
-
-                    <option value="">Select Semester</option>
-
-                    <option>Semester 1</option>
-                    <option>Semester 2</option>
-                    <option>Semester 3</option>
-                    <option>Semester 4</option>
-                    <option>Semester 5</option>
-                    <option>Semester 6</option>
-                    <option>Semester 7</option>
-                    <option>Semester 8</option>
-                    <option>Master Semester 1</option>
-                    <option>Master Semester 2</option>
-                    <option>Master Semester 3</option>
-                    <option>Master Semester 4</option>
-
-                </select>
-
-            </div>
-
-
-            <!-- Subject -->
-            <div class="form-group">
-
-                <label>Subject</label>
-
-                <select id="subject" required>
-
-                    <option value="">Select Subject</option>
-
-                    <option>Operating System</option>
-                    <option>Data Structures</option>
-                    <option>Database Management System</option>
-                    <option>Object Oriented Programming</option>
-                    <option>Computer Networks</option>
-                    <option>Web Development</option>
-                    <option>Software Engineering</option>
-                    <option>Computer Architecture</option>
-                    <option>Artificial Intelligence</option>
-                    <option>Machine Learning</option>
-                    <option>Data Science</option>
-                    <option>Cyber Security</option>
-                    <option>Cloud Computing</option>
-                    <option>Java Programming</option>
-                    <option>Python Programming</option>
-                    <option>Mathematics</option>
-                    <option>Other</option>
-
-                </select>
-
-            </div>
-
-
-            <!-- Chapter -->
-            <div class="form-group">
-
-                <label>Chapter / Unit</label>
-
-                <input
-                    type="text"
-                    id="chapter"
-                    placeholder="Example: Unit 1 - Introduction to OS"
-                    required
-                >
-
-            </div>
-
-
-            <!-- Assignment Title -->
-            <div class="form-group">
-
-                <label>Assignment Title</label>
-
-                <input
-                    type="text"
-                    id="title"
-                    placeholder="Enter assignment title"
-                    required
-                >
-
-            </div>
-
-
-            <!-- Description -->
-            <div class="form-group">
-
-                <label>Assignment Description</label>
-
-                <textarea
-                    id="description"
-                    rows="5"
-                    placeholder="Enter assignment instructions..."
-                    required
-                ></textarea>
-
-            </div>
-
-
-            <!-- Important Questions -->
-            <div class="form-group">
-
-                <label>Important Questions</label>
-
-                <textarea
-                    id="questions"
-                    rows="6"
-                    placeholder="Enter important questions&#10;1. Explain Operating System.&#10;2. Explain process states.&#10;3. Explain PCB."
-                ></textarea>
-
-            </div>
-
-
-            <!-- Marks -->
-            <div class="form-group">
-
-                <label>Total Marks</label>
-
-                <input
-                    type="number"
-                    id="marks"
-                    placeholder="Example: 20"
-                    min="1"
-                    required
-                >
-
-            </div>
-
-
-            <!-- Due Date -->
-            <div class="form-group">
-
-                <label>Submission Date</label>
-
-                <input
-                    type="date"
-                    id="dueDate"
-                    required
-                >
-
-            </div>
-
-
-            <!-- File Upload -->
-            <div class="form-group">
-
-                <label>Upload Chapter / Reference File</label>
-
-                <input
-                    type="file"
-                    id="chapterFile"
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
-                >
-
-                <small>
-                    PDF, DOC, DOCX, PPT, PPTX or TXT
-                </small>
-
-            </div>
-
-
-            <!-- Important Assignment -->
-            <div class="checkbox">
-
-                <input
-                    type="checkbox"
-                    id="important"
-                >
-
-                <label for="important">
-                    Mark this assignment as Important
-                </label>
-
-            </div>
-
-
-            <!-- Buttons -->
-            <div class="buttons">
-
-                <button type="submit" class="create-btn">
-                    Create Assignment
-                </button>
-
-                <button
-                    type="reset"
-                    class="reset-btn"
-                >
-                    Reset
-                </button>
-
-            </div>
-
-        </form>
-
-    </section>
-
-
-    <!-- Assignment Section -->
-    <section id="assignments" class="container">
-
-        <div class="assignment-header">
-
-            <div>
-
-                <h2>Created Assignments</h2>
+                <h1>Smart Assignments.<br>Better Learning.</h1>
 
                 <p>
-                    Manage your created assignments
+                    Upload your subject material and prepare
+                    structured assignments for your students.
                 </p>
 
+                <div class="login-features">
+                    <div>✓ PDF Material Reader</div>
+                    <div>✓ 70 Marks Question Paper</div>
+                    <div>✓ Faculty Subject Dashboard</div>
+                </div>
             </div>
 
-            <input
-                type="text"
-                id="search"
-                placeholder="🔍 Search assignment..."
-            >
-
+            <div class="login-footer">
+                Designed for faculty and academic learning.
+            </div>
         </div>
 
+        <div class="login-form-area">
 
-        <!-- Assignment Cards -->
-        <div id="assignmentList">
+            <form id="loginForm" class="login-card">
 
-            <!-- JavaScript will add assignments here -->
+                <span class="eyebrow">FACULTY PORTAL</span>
+
+                <h2>Welcome Back!</h2>
+
+                <p class="muted">
+                    Sign in to create your assignment.
+                </p>
+
+                <div class="form-group">
+                    <label for="facultyLogin">Faculty Name</label>
+
+                    <input
+                        type="text"
+                        id="facultyLogin"
+                        placeholder="Enter faculty name"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="facultyEmail">Faculty Email</label>
+
+                    <input
+                        type="email"
+                        id="facultyEmail"
+                        placeholder="faculty@example.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="facultyPassword">Password</label>
+
+                    <input
+                        type="password"
+                        id="facultyPassword"
+                        placeholder="Enter password"
+                        minlength="4"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="loginSubject">Select Your Subject</label>
+
+                    <select id="loginSubject" required>
+
+                        <option value="">Choose Subject</option>
+
+                        <option>Operating System</option>
+                        <option>Computer Networks</option>
+                        <option>Database Management System</option>
+                        <option>Data Structures</option>
+                        <option>Object Oriented Programming</option>
+                        <option>Java Programming</option>
+                        <option>Python Programming</option>
+                        <option>Web Development</option>
+                        <option>Software Engineering</option>
+                        <option>Computer Architecture</option>
+                        <option>Artificial Intelligence</option>
+                        <option>Machine Learning</option>
+                        <option>Data Science</option>
+                        <option>Cyber Security</option>
+                        <option>Cloud Computing</option>
+                        <option>Mathematics</option>
+
+                    </select>
+                </div>
+
+                <button type="submit" class="primary-btn full-btn">
+                    Sign In →
+                </button>
+
+                <p id="loginMessage" class="message" aria-live="polite"></p>
+
+                <div class="demo-note">
+                    <strong>Demo Login</strong><br>
+                    Enter any faculty name and email, then use
+                    a password of at least 4 characters.
+                </div>
+
+            </form>
 
         </div>
 
     </section>
 
 
-    <!-- Footer -->
-    <footer>
+    <!-- ================= MAIN APPLICATION ================= -->
 
-        <p>
-            © 2026 GTU Assignment Creator | Faculty Assignment Management
-        </p>
+    <div id="appPage" class="app-page hidden">
 
-    </footer>
+        <!-- Sidebar -->
+
+        <aside class="sidebar">
+
+            <a href="#dashboard" class="sidebar-brand">
+                <span>🎓</span>
+                <span>GTU Creator</span>
+            </a>
+
+            <div class="faculty-mini-profile">
+                <div class="avatar" id="facultyAvatar">F</div>
+
+                <div>
+                    <strong id="sidebarFaculty">Faculty</strong>
+                    <small>Faculty Account</small>
+                </div>
+            </div>
+
+            <p class="sidebar-heading">WORKSPACE</p>
+
+            <nav class="sidebar-nav">
+
+                <a href="#dashboard" class="nav-link active"
+                   data-section="dashboard">
+                    <span>▦</span> Dashboard
+                </a>
+
+                <a href="#create" class="nav-link"
+                   data-section="create">
+                    <span>＋</span> Create Assignment
+                </a>
+
+                <a href="#assignments" class="nav-link"
+                   data-section="assignments">
+                    <span>▤</span> My Assignments
+                </a>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-help">
+                    <strong>Need help?</strong>
+                    <p>Upload a readable PDF to generate questions.</p>
+                </div>
+
+                <button id="logoutBtn" class="logout-btn">
+                    ↪ Sign Out
+                </button>
+            </div>
+
+        </aside>
 
 
-    <script src="script.js"></script>
+        <!-- Main Content -->
+
+        <main class="main-content">
+
+            <!-- Topbar -->
+
+            <header class="topbar">
+
+                <div>
+                    <p class="topbar-label">FACULTY WORKSPACE</p>
+                    <h2 id="welcomeHeading">Welcome back!</h2>
+                </div>
+
+                <div class="topbar-right">
+                    <span class="online-dot"></span>
+                    <span id="topbarSubject">No subject selected</span>
+                </div>
+
+            </header>
+
+
+            <!-- ================= DASHBOARD ================= -->
+
+            <section id="dashboard" class="content-section">
+
+                <div class="welcome-banner">
+
+                    <div>
+                        <span class="banner-tag">YOUR SMART WORKSPACE</span>
+
+                        <h1>Create Assignments<br>the Smarter Way.</h1>
+
+                        <p>
+                            Upload study material, generate questions
+                            and prepare a structured 70-mark assignment.
+                        </p>
+
+                        <button
+                            class="banner-btn"
+                            data-go="create"
+                            type="button">
+                            + Create New Assignment
+                        </button>
+                    </div>
+
+                    <div class="banner-illustration">
+                        <div class="illustration-card">
+                            <span class="big-icon">📚</span>
+                            <strong>AI QUESTION MAKER</strong>
+                            <span>Learn · Generate · Organize</span>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- Statistics -->
+
+                <div class="stats-grid">
+
+                    <article class="stat-card">
+                        <div class="stat-icon purple">▤</div>
+                        <p>Total Assignments</p>
+                        <h2 id="totalAssignments">0</h2>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon blue">📄</div>
+                        <p>PDF Assignments</p>
+                        <h2 id="pdfAssignments">0</h2>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon green">✓</div>
+                        <p>Total Questions</p>
+                        <h2 id="totalQuestions">0</h2>
+                    </article>
+
+                    <article class="stat-card">
+                        <div class="stat-icon orange">★</div>
+                        <p>Subjects Used</p>
+                        <h2 id="totalSubjects">0</h2>
+                    </article>
+
+                </div>
+
+
+                <!-- Subject Selection -->
+
+                <div class="section-heading">
+
+                    <div>
+                        <h2>Explore Subjects</h2>
+                        <p>Choose a subject to prepare an assignment.</p>
+                    </div>
+
+                </div>
+
+                <div class="subject-grid">
+
+                    <button class="subject-card"
+                            data-subject="Operating System">
+                        <span class="subject-icon">💻</span>
+                        <strong>Operating System</strong>
+                        <small>Memory, Processes, Scheduling</small>
+                        <span class="subject-arrow">→</span>
+                    </button>
+
+                    <button class="subject-card"
+                            data-subject="Computer Networks">
+                        <span class="subject-icon">🌐</span>
+                        <strong>Computer Networks</strong>
+                        <small>OSI, TCP/IP, Protocols</small>
+                        <span class="subject-arrow">→</span>
+                    </button>
+
+                    <button class="subject-card"
+                            data-subject="Database Management System">
+                        <span class="subject-icon">🗄️</span>
+                        <strong>Database Management</strong>
+                        <small>SQL, Tables, Normalization</small>
+                        <span class="subject-arrow">→</span>
+                    </button>
+
+                    <button class="subject-card"
+                            data-subject="Data Structures">
+                        <span class="subject-icon">🧩</span>
+                        <strong>Data Structures</strong>
+                        <small>Arrays, Stacks, Trees</small>
+                        <span class="subject-arrow">→</span>
+                    </button>
+
+                    <button class="subject-card"
+                            data-subject="Object Oriented Programming">
+                        <span class="subject-icon">🧱</span>
+                        <strong>OOP</strong>
+                        <small>Classes, Objects, Inheritance</small>
+                        <span class="subject-arrow">→</span>
+                    </button>
+
+                    <button class="subject-card"
+                            data-subject="Web Development">
+                        <span class="subject-icon">🌍</span>
+                        <strong>Web Development</strong>
+                        <small>HTML, CSS, JavaScript</small>
+                        <span class="subject-arrow">→</span>
+                    </button>
+
+                </div>
+
+
+                <!-- Recent Assignments -->
+
+                <div class="section-heading">
+                    <div>
+                        <h2>Recent Assignments</h2>
+                        <p>Your latest created assignments.</p>
+                    </div>
+
+                    <button class="text-btn"
+                            data-go="assignments"
+                            type="button">
+                        View All →
+                    </button>
+                </div>
+
+                <div id="recentAssignments" class="recent-list"></div>
+
+            </section>
+
+
+            <!-- ================= CREATE ASSIGNMENT ================= -->
+
+            <section id="create" class="content-section hidden">
+
+                <div class="page-title">
+                    <span class="eyebrow">ASSIGNMENT WORKSHOP</span>
+                    <h1>Create New Assignment</h1>
+                    <p>Upload your chapter material and generate questions.</p>
+                </div>
+
+                <form id="assignmentForm" class="workspace-form">
+
+                    <div class="form-section-title">
+                        <span>01</span>
+
+                        <div>
+                            <h3>Assignment Information</h3>
+                            <p>Enter your academic details.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="facultyName">Faculty Name</label>
+
+                            <input
+                                type="text"
+                                id="facultyName"
+                                required
+                                placeholder="Enter faculty name"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="program">Program / Course</label>
+
+                            <select id="program" required>
+                                <option value="">Select Program</option>
+                                <option>BCA</option>
+                                <option>Integrated MCA</option>
+                                <option>MCA</option>
+                                <option>B.Tech Computer Engineering</option>
+                                <option>B.Tech IT</option>
+                                <option>B.Tech AI & ML</option>
+                                <option>B.Tech Data Science</option>
+                                <option>BBA</option>
+                                <option>B.Com</option>
+                                <option>MBA</option>
+                                <option>M.Tech</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="semester">Semester</label>
+
+                            <select id="semester" required>
+                                <option value="">Select Semester</option>
+                                <option>Semester 1</option>
+                                <option>Semester 2</option>
+                                <option>Semester 3</option>
+                                <option>Semester 4</option>
+                                <option>Semester 5</option>
+                                <option>Semester 6</option>
+                                <option>Semester 7</option>
+                                <option>Semester 8</option>
+                                <option>Master Semester 1</option>
+                                <option>Master Semester 2</option>
+                                <option>Master Semester 3</option>
+                                <option>Master Semester 4</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+
+                            <select id="subject" required>
+                                <option value="">Select Subject</option>
+                                <option>Operating System</option>
+                                <option>Computer Networks</option>
+                                <option>Database Management System</option>
+                                <option>Data Structures</option>
+                                <option>Object Oriented Programming</option>
+                                <option>Java Programming</option>
+                                <option>Python Programming</option>
+                                <option>Web Development</option>
+                                <option>Software Engineering</option>
+                                <option>Computer Architecture</option>
+                                <option>Artificial Intelligence</option>
+                                <option>Machine Learning</option>
+                                <option>Data Science</option>
+                                <option>Cyber Security</option>
+                                <option>Cloud Computing</option>
+                                <option>Mathematics</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="chapter">Chapter / Unit</label>
+
+                            <input
+                                type="text"
+                                id="chapter"
+                                required
+                                placeholder="Example: Unit 1 - Memory Management"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignmentTitle">Assignment Title</label>
+
+                            <input
+                                type="text"
+                                id="assignmentTitle"
+                                required
+                                placeholder="Enter assignment title"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dueDate">Submission Date</label>
+
+                            <input type="date" id="dueDate" required>
+                        </div>
+
+                    </div>
+
+
+                    <!-- PDF Upload -->
+
+                    <div class="form-section-title section-gap">
+                        <span>02</span>
+
+                        <div>
+                            <h3>Upload Study Material</h3>
+                            <p>Choose a text-based PDF file.</p>
+                        </div>
+                    </div>
+
+                    <div class="upload-box">
+
+                        <div class="upload-icon">📄</div>
+
+                        <h3>Upload Chapter PDF</h3>
+
+                        <p>
+                            Select your study material to extract
+                            text and prepare questions.
+                        </p>
+
+                        <label for="chapterFile" class="upload-label">
+                            Choose PDF File
+                        </label>
+
+                        <input
+                            type="file"
+                            id="chapterFile"
+                            accept=".pdf,application/pdf"
+                            required
+                        >
+
+                        <p id="fileName" class="file-name">
+                            No file selected
+                        </p>
+
+                        <small>
+                            Text-based PDFs work best.
+                            Scanned PDFs may require OCR.
+                        </small>
+
+                    </div>
+
+
+                    <!-- Description -->
+
+                    <div class="form-group section-gap">
+                        <label for="description">Assignment Instructions</label>
+
+                        <textarea
+                            id="description"
+                            rows="3"
+                            placeholder="Enter instructions for students..."
+                        ></textarea>
+                    </div>
+
+
+                    <!-- Generate -->
+
+                    <button
+                        type="button"
+                        id="generateFromFile"
+                        class="primary-btn generate-btn">
+
+                        ✨ Generate 70 Marks Questions
+
+                    </button>
+
+                    <p id="generationStatus"
+                       class="message"
+                       aria-live="polite"></p>
+
+
+                    <!-- Generated Questions -->
+
+                    <div id="questionPreview" class="question-preview hidden">
+
+                        <div class="preview-heading">
+                            <div>
+                                <span class="eyebrow">QUESTION PAPER BUILDER</span>
+                                <h2>Generated Questions</h2>
+                            </div>
+
+                            <div class="marks-total">
+                                <strong id="previewMarks">70</strong>
+                                <span>Total Marks</span>
+                            </div>
+                        </div>
+
+                        <div class="pattern-summary">
+                            <span>10 × 1 = 10 marks</span>
+                            <span>5 × 5 = 25 marks</span>
+                            <span>5 × 7 = 35 marks</span>
+                        </div>
+
+                        <div id="questionGroups"></div>
+
+                        <div class="form-group section-gap">
+                            <label for="questions">
+                                Edit Questions Before Saving
+                            </label>
+
+                            <textarea
+                                id="questions"
+                                rows="20"
+                                spellcheck="true"
+                            ></textarea>
+
+                            <small>
+                                You can edit, correct or replace
+                                the generated questions.
+                            </small>
+                        </div>
+
+                        <div class="action-row">
+
+                            <button
+                                type="button"
+                                id="regenerateBtn"
+                                class="secondary-btn">
+                                ↻ Regenerate
+                            </button>
+
+                            <button
+                                type="button"
+                                id="printBtn"
+                                class="secondary-btn">
+                                🖨 Print / Save PDF
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="primary-btn">
+                                ✓ Save Assignment
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+
+            <!-- ================= ASSIGNMENT LIST ================= -->
+
+            <section id="assignments" class="content-section hidden">
+
+                <div class="page-title">
+                    <span class="eyebrow">YOUR WORKSPACE</span>
+                    <h1>My Assignments</h1>
+                    <p>Search, review, print or delete your assignments.</p>
+                </div>
+
+                <div class="list-toolbar">
+
+                    <input
+                        type="search"
+                        id="search"
+                        placeholder="🔍 Search by title, subject or chapter..."
+                    >
+
+                    <select id="filterSubject">
+                        <option value="">All Subjects</option>
+                        <option>Operating System</option>
+                        <option>Computer Networks</option>
+                        <option>Database Management System</option>
+                        <option>Data Structures</option>
+                        <option>Object Oriented Programming</option>
+                        <option>Java Programming</option>
+                        <option>Python Programming</option>
+                        <option>Web Development</option>
+                        <option>Software Engineering</option>
+                        <option>Computer Architecture</option>
+                        <option>Artificial Intelligence</option>
+                        <option>Machine Learning</option>
+                        <option>Data Science</option>
+                        <option>Cyber Security</option>
+                        <option>Cloud Computing</option>
+                        <option>Mathematics</option>
+                    </select>
+
+                </div>
+
+                <div id="assignmentList" class="assignment-list"></div>
+
+            </section>
+
+
+            <footer class="app-footer">
+                © 2026 GTU AI Assignment Creator
+                <span>Built for smarter academic work.</span>
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <!-- Printable question paper -->
+
+    <section id="printArea" class="print-area"></section>
 
 </body>
-
 </html>
