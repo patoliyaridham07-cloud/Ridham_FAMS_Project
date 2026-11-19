@@ -55,88 +55,69 @@
         <div class="login-form-area">
 
             <form id="loginForm" class="login-card">
-
                 <span class="eyebrow">FACULTY PORTAL</span>
-
                 <h2>Welcome Back!</h2>
-
-                <p class="muted">
-                    Sign in to create your assignment.
-                </p>
+                <p class="muted">Sign in using your registered Login ID and password.</p>
 
                 <div class="form-group">
-                    <label for="facultyLogin">Faculty Name</label>
-
-                    <input
-                        type="text"
-                        id="facultyLogin"
-                        placeholder="Enter faculty name"
-                        required
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="facultyEmail">Faculty Email</label>
-
-                    <input
-                        type="email"
-                        id="facultyEmail"
-                        placeholder="faculty@example.com"
-                        required
-                    >
+                    <label for="loginId">Login ID</label>
+                    <input type="text" id="loginId" placeholder="Enter your Login ID" autocomplete="username" required>
                 </div>
 
                 <div class="form-group">
                     <label for="facultyPassword">Password</label>
-
-                    <input
-                        type="password"
-                        id="facultyPassword"
-                        placeholder="Enter password"
-                        minlength="4"
-                        required
-                    >
+                    <input type="password" id="facultyPassword" placeholder="Enter your password" autocomplete="current-password" required>
                 </div>
+
+                <button type="submit" class="primary-btn full-btn">Sign In →</button>
+                <p id="loginMessage" class="message" aria-live="polite"></p>
+                <p class="auth-switch">Don't have an account? <button type="button" id="showRegisterBtn" class="link-btn">Create Account</button></p>
+                <div class="demo-note"><strong>New Faculty?</strong><br>Create your account first. Your Login ID and password will be required every time you sign in.</div>
+            </form>
+
+            <form id="registerForm" class="login-card hidden">
+                <span class="eyebrow">NEW FACULTY ACCOUNT</span>
+                <h2>Create Account</h2>
+                <p class="muted">Register once to get your own Login ID and password.</p>
 
                 <div class="form-group">
-                    <label for="loginSubject">Select Your Subject</label>
-
-                    <select id="loginSubject" required>
-
+                    <label for="registerName">Faculty Name</label>
+                    <input type="text" id="registerName" placeholder="Enter your full name" autocomplete="name" minlength="2" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerLoginId">Create Login ID</label>
+                    <input type="text" id="registerLoginId" placeholder="Example: faculty123" autocomplete="username" minlength="4" maxlength="30" pattern="[A-Za-z0-9._-]+" title="Use 4-30 letters, numbers, dots, underscores or hyphens" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Faculty Email</label>
+                    <input type="email" id="registerEmail" placeholder="faculty@example.com" autocomplete="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Create Password</label>
+                    <input type="password" id="registerPassword" placeholder="At least 6 characters" autocomplete="new-password" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerConfirmPassword">Confirm Password</label>
+                    <input type="password" id="registerConfirmPassword" placeholder="Re-enter your password" autocomplete="new-password" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerSubject">Select Your Subject</label>
+                    <select id="registerSubject" required>
                         <option value="">Choose Subject</option>
-
-                        <option>Operating System</option>
-                        <option>Computer Networks</option>
-                        <option>Database Management System</option>
-                        <option>Data Structures</option>
-                        <option>Object Oriented Programming</option>
-                        <option>Java Programming</option>
-                        <option>Python Programming</option>
-                        <option>Web Development</option>
-                        <option>Software Engineering</option>
-                        <option>Computer Architecture</option>
-                        <option>Artificial Intelligence</option>
-                        <option>Machine Learning</option>
-                        <option>Data Science</option>
-                        <option>Cyber Security</option>
-                        <option>Cloud Computing</option>
-                        <option>Mathematics</option>
-
+                        <option>Operating System</option><option>Computer Networks</option>
+                        <option>Database Management System</option><option>Data Structures</option>
+                        <option>Object Oriented Programming</option><option>Java Programming</option>
+                        <option>Python Programming</option><option>Web Development</option>
+                        <option>Software Engineering</option><option>Computer Architecture</option>
+                        <option>Artificial Intelligence</option><option>Machine Learning</option>
+                        <option>Data Science</option><option>Cyber Security</option>
+                        <option>Cloud Computing</option><option>Mathematics</option>
                     </select>
                 </div>
-
-                <button type="submit" class="primary-btn full-btn">
-                    Sign In →
-                </button>
-
-                <p id="loginMessage" class="message" aria-live="polite"></p>
-
-                <div class="demo-note">
-                    <strong>Demo Login</strong><br>
-                    Enter any faculty name and email, then use
-                    a password of at least 4 characters.
-                </div>
-
+                <button type="submit" class="primary-btn full-btn">Create Account →</button>
+                <p id="registerMessage" class="message" aria-live="polite"></p>
+                <p class="auth-switch">Already registered? <button type="button" id="showLoginBtn" class="link-btn">Sign In</button></p>
+                <div class="demo-note"><strong>Account information</strong><br>Use a unique Login ID and a password with at least 6 characters.</div>
             </form>
 
         </div>
