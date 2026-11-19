@@ -17,7 +17,11 @@ const loginPage = document.getElementById("loginPage");
 const appPage = document.getElementById("appPage");
 
 const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
 const loginMessage = document.getElementById("loginMessage");
+const registerMessage = document.getElementById("registerMessage");
+const showRegisterBtn = document.getElementById("showRegisterBtn");
+const showLoginBtn = document.getElementById("showLoginBtn");
 
 const logoutBtn = document.getElementById("logoutBtn");
 
@@ -61,22 +65,11 @@ const printBtn =
    3. APPLICATION VARIABLES
 ========================================= */
 
-// Current faculty information.
 let currentFaculty = null;
-
-// Extracted text from the uploaded PDF.
 let extractedText = "";
-
-// Generated question paper.
 let generatedPaper = null;
-
-// Selected PDF name.
 let selectedFileName = "";
-
-// Keep track of the PDF used for generation.
 let generatedFromFile = null;
-
-// Prevent duplicate submissions.
 let isGenerating = false;
 
 
@@ -84,18 +77,46 @@ let isGenerating = false;
    4. LOCAL STORAGE HELPERS
 ========================================= */
 
-// Return the key used to store the current session.
 function getSessionKey() {
     return "gtuAssignmentSession";
 }
 
-// Return the key used to store assignments.
 function getAssignmentKey() {
     return "gtuAssignments";
 }
 
+function getAccountsKey() {
+    return "gtuFacultyAccounts";
+}
 
-// Read JSON safely from localStorage.
+function getAccounts() {
+    const accounts = readStorage(getAccountsKey(), []);
+    return Array.isArray(accounts) ? accounts : [];
+}
+
+async function hashPassword(password) {
+    if (!window.crypto || !window.crypto.subtle) {
+        throw new Error("Secure password hashing is unavailable. Please run this app on localhost or HTTPS.");
+    }
+
+    const encoded = new TextEncoder().encode(password);
+    const hashBuffer = await window.crypto.subtle.digest("SHA-256", encoded);
+
+    return Array.from(new Uint8Array(hashBuffer))
+        .map(function (byte) {
+            return byte.toString(16).padStart(2, "0");
+        })
+        .join("");
+}
+
+function showAuthForm(formToShow) {
+    loginForm.classList.toggle("hidden", formToShow !== "login");
+    registerForm.classList.toggle("hidden", formToShow !== "register");
+
+    showMessage(loginMessage, "", "");
+    showMessage(registerMessage, "", "");
+}
+
 function readStorage(key, defaultValue) {
     try {
         const value = localStorage.getItem(key);
@@ -112,8 +133,6 @@ function readStorage(key, defaultValue) {
     }
 }
 
-
-// Save JSON safely to localStorage.
 function writeStorage(key, value) {
     try {
         localStorage.setItem(
@@ -134,8 +153,6 @@ function writeStorage(key, value) {
     }
 }
 
-
-// Get all assignments.
 function getAllAssignments() {
     const assignments = readStorage(
         getAssignmentKey(),
@@ -147,8 +164,6 @@ function getAllAssignments() {
         : [];
 }
 
-
-// Get assignments belonging to the logged-in faculty.
 function getMyAssignments() {
     if (!currentFaculty) {
         return [];
@@ -161,68 +176,147 @@ function getMyAssignments() {
 
 
 /* =========================================
-   5. LOGIN FUNCTIONALITY
+   5. REGISTRATION AND LOGIN
 ========================================= */
 
-loginForm.addEventListener("submit", function (event) {
+showRegisterBtn.addEventListener("click", function () {
+    showAuthForm("register");
+});
 
+showLoginBtn.addEventListener("click", function () {
+    showAuthForm("login");
+});
+
+registerForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
-    const facultyName = document
-        .getElementById("facultyLogin")
-        .value.trim();
+    const name = document.getElementById("registerName").value.trim();
+    const loginId = document.getElementById("registerLoginId").value.trim().toLowerCase();
+    const email = document.getElementById("registerEmail").value.trim().toLowerCase();
+    const password = document.getElementById("registerPassword").value;
+    const confirmPassword = document.getElementById("registerConfirmPassword").value;
+    const subject = document.getElementById("registerSubject").value;
 
-    const facultyEmail = document
-        .getElementById("facultyEmail")
-        .value.trim()
-        .toLowerCase();
+    if (name.length < 2 || loginId.length < 4 || !email || password.length < 6 || !subject) {
+        showMessage(registerMessage, "Please complete all fields correctly. Password must contain at least 6 characters.", "error");
+        return;
+    }
 
-    const password = document
-        .getElementById("facultyPassword")
-        .value;
+    if (password !== confirmPassword) {
+        showMessage(registerMessage, "Passwords do not match. Please try again.", "error");
+        return;
+    }
 
-    const subject = document
-        .getElementById("loginSubject")
-        .value;
+    const accounts = getAccounts();
 
-    // Basic validation.
-    if (
-        facultyName.length < 2 ||
-        !facultyEmail ||
-        password.length < 4 ||
-        !subject
-    ) {
+    const loginIdExists = accounts.some(function (account) {
+        return account.loginId.toLowerCase() === loginId;
+    });
+
+    const emailExists = accounts.some(function (account) {
+        return account.email.toLowerCase() === email;
+    });
+
+    if (loginIdExists) {
+        showMessage(registerMessage, "This Login ID is already registered. Please choose another one.", "error");
+        return;
+    }
+
+    if (emailExists) {
+        showMessage(registerMessage, "This email is already registered. Please sign in with your existing account.", "error");
+        return;
+    }
+
+    try {
+        const passwordHash = await hashPassword(password);
+
+        accounts.push({
+            name: name,
+            loginId: loginId,
+            email: email,
+            subject: subject,
+            passwordHash: passwordHash
+        });
+
+        if (!writeStorage(getAccountsKey(), accounts)) return;
+
+        registerForm.reset();
+
+        showAuthForm("login");
+
+        document.getElementById("loginId").value = loginId;
+
         showMessage(
             loginMessage,
-            "Please enter valid login details.",
-            "error"
+            "Account created successfully. Please sign in with your new Login ID and password.",
+            "success"
         );
 
+    } catch (error) {
+        console.error("Registration error:", error);
+
+        showMessage(
+            registerMessage,
+            error.message || "Could not create your account. Please try again.",
+            "error"
+        );
+    }
+});
+
+
+loginForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const loginId = document.getElementById("loginId").value.trim().toLowerCase();
+    const password = document.getElementById("facultyPassword").value;
+
+    if (!loginId || !password) {
+        showMessage(loginMessage, "Enter your Login ID and password.", "error");
         return;
     }
 
-    // This is a demo login, not secure authentication.
-    currentFaculty = {
-        name: facultyName,
-        email: facultyEmail,
-        subject: subject
-    };
+    const account = getAccounts().find(function (item) {
+        return item.loginId.toLowerCase() === loginId;
+    });
 
-    // Store the demo session.
-    const sessionSaved = writeStorage(
-        getSessionKey(),
-        currentFaculty
-    );
-
-    if (!sessionSaved) {
-        currentFaculty = null;
+    if (!account) {
+        showMessage(loginMessage, "Account not found. Please create an account first.", "error");
         return;
     }
 
-    showApplication();
+    try {
+        const passwordHash = await hashPassword(password);
 
-    loginForm.reset();
+        if (passwordHash !== account.passwordHash) {
+            showMessage(loginMessage, "Incorrect password. Please try again.", "error");
+            return;
+        }
 
+        currentFaculty = {
+            name: account.name,
+            loginId: account.loginId,
+            email: account.email,
+            subject: account.subject
+        };
+
+        if (!writeStorage(getSessionKey(), currentFaculty)) {
+            currentFaculty = null;
+            return;
+        }
+
+        loginForm.reset();
+
+        showApplication();
+
+    } catch (error) {
+        console.error("Login error:", error);
+
+        showMessage(
+            loginMessage,
+            error.message || "Unable to sign in. Please try again.",
+            "error"
+        );
+    }
 });
 
 
@@ -239,7 +333,6 @@ function showApplication() {
     loginPage.classList.add("hidden");
     appPage.classList.remove("hidden");
 
-    // Update faculty information.
     document.getElementById("sidebarFaculty").textContent =
         currentFaculty.name;
 
@@ -252,17 +345,14 @@ function showApplication() {
     document.getElementById("topbarSubject").textContent =
         currentFaculty.subject;
 
-    // Fill the form with faculty details.
     document.getElementById("facultyName").value =
         currentFaculty.name;
 
     document.getElementById("subject").value =
         currentFaculty.subject;
 
-    // Refresh dashboard.
     renderDashboard();
 
-    // Show dashboard initially.
     showSection("dashboard");
 }
 
@@ -281,7 +371,6 @@ logoutBtn.addEventListener("click", function () {
         console.error(error);
     }
 
-    // Clear temporary data.
     extractedText = "";
     generatedPaper = null;
     generatedFromFile = null;
@@ -357,7 +446,6 @@ function showSection(sectionId) {
         .getElementById(sectionId)
         .classList.remove("hidden");
 
-    // Update active navigation.
     document
         .querySelectorAll(".nav-link")
         .forEach(function (link) {
@@ -369,7 +457,6 @@ function showSection(sectionId) {
 
         });
 
-    // Refresh assignments when opening the list.
     if (sectionId === "assignments") {
         renderAssignments();
     }
@@ -385,7 +472,6 @@ function showSection(sectionId) {
 }
 
 
-// Sidebar navigation.
 document
     .querySelectorAll(".nav-link")
     .forEach(function (link) {
@@ -401,7 +487,6 @@ document
     });
 
 
-// Dashboard buttons that navigate to another section.
 document
     .querySelectorAll("[data-go]")
     .forEach(function (button) {
@@ -415,7 +500,6 @@ document
     });
 
 
-// Subject cards.
 document
     .querySelectorAll("[data-subject]")
     .forEach(function (button) {
@@ -427,8 +511,11 @@ document
             document.getElementById("subject").value =
                 subject;
 
-            document.getElementById("loginSubject").value =
-                subject;
+            const loginSubject = document.getElementById("loginSubject");
+
+            if (loginSubject) {
+                loginSubject.value = subject;
+            }
 
             showSection("create");
 
@@ -445,7 +532,6 @@ chapterFile.addEventListener("change", function () {
 
     const file = chapterFile.files[0];
 
-    // Clear previous PDF information.
     extractedText = "";
     generatedPaper = null;
     generatedFromFile = null;
@@ -455,6 +541,7 @@ chapterFile.addEventListener("change", function () {
     if (!file) {
 
         selectedFileName = "";
+
         fileName.textContent = "No file selected";
 
         showMessage(
@@ -466,7 +553,6 @@ chapterFile.addEventListener("change", function () {
         return;
     }
 
-    // Accept PDF files only.
     const isPDF =
         file.type === "application/pdf" ||
         file.name.toLowerCase().endsWith(".pdf");
@@ -488,7 +574,6 @@ chapterFile.addEventListener("change", function () {
         return;
     }
 
-    // File size limit: 15 MB.
     const maximumSize = 15 * 1024 * 1024;
 
     if (file.size > maximumSize) {
@@ -532,7 +617,6 @@ async function loadPDFLibrary() {
         return window.pdfjsLib;
     }
 
-    // Load PDF.js dynamically if it has not loaded.
     await new Promise(function (resolve, reject) {
 
         const existingScript = document.querySelector(
@@ -572,6 +656,9 @@ async function loadPDFLibrary() {
         throw new Error("PDF.js could not be loaded.");
     }
 
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        PDF_WORKER_URL;
+
     return window.pdfjsLib;
 }
 
@@ -584,44 +671,23 @@ async function extractPDFText(file) {
 
     const pdfjsLib = await loadPDFLibrary();
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-        PDF_WORKER_URL;
-
     const arrayBuffer = await file.arrayBuffer();
 
-    const pdf = await pdfjsLib.getDocument({
-        data: new Uint8Array(arrayBuffer)
-    }).promise;
+    const loadingTask = pdfjsLib.getDocument({
+        data: arrayBuffer
+    });
+
+    const pdf = await loadingTask.promise;
 
     let fullText = "";
 
-    const maximumPages = Math.min(pdf.numPages, 100);
-
-    // Read each page.
-    for (
-        let pageNumber = 1;
-        pageNumber <= maximumPages;
-        pageNumber++
-    ) {
-
-        showMessage(
-            generationStatus,
-            "Reading PDF page " +
-                pageNumber +
-                " of " +
-                maximumPages +
-                "...",
-            "info"
-        );
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
 
         const page = await pdf.getPage(pageNumber);
 
         const textContent = await page.getTextContent();
 
         const pageText = textContent.items
-            .filter(function (item) {
-                return typeof item.str === "string";
-            })
             .map(function (item) {
                 return item.str;
             })
@@ -630,21 +696,7 @@ async function extractPDFText(file) {
         fullText += "\n" + pageText;
     }
 
-    fullText = fullText
-        .replace(/\s+/g, " ")
-        .trim();
-
-    if (fullText.length < 100) {
-
-        throw new Error(
-            "Not enough readable text was found. " +
-            "Your PDF may be scanned or image-based. " +
-            "Use a text-based PDF or OCR to extract its text."
-        );
-
-    }
-
-    return fullText;
+    return fullText.trim();
 }
 
 
@@ -652,11 +704,11 @@ async function extractPDFText(file) {
    13. CLEAN EXTRACTED TEXT
 ========================================= */
 
-function cleanText(text) {
+function cleanExtractedText(text) {
 
-    return text
-        .replace(/\u00a0/g, " ")
-        .replace(/[ \t]+/g, " ")
+    return String(text || "")
+        .replace(/\s+/g, " ")
+        .replace(/[^\w\s.,;:!?()[\]{}%+\-/]/g, " ")
         .replace(/\s+/g, " ")
         .trim();
 }
@@ -668,501 +720,283 @@ function cleanText(text) {
 
 function splitIntoSentences(text) {
 
-    const cleanedText = cleanText(text);
+    const cleanedText = cleanExtractedText(text);
 
-    // Split on sentence endings and common PDF line separators.
-    let sentences = cleanedText
-        .split(/(?<=[.!?])\s+|(?<=;)\s+/);
-
-    sentences = sentences
+    return cleanedText
+        .split(/(?<=[.!?])\s+/)
         .map(function (sentence) {
-
-            return sentence
-                .replace(/^[\s•\-–]+/, "")
-                .trim();
-
+            return sentence.trim();
         })
         .filter(function (sentence) {
-
-            return (
-                sentence.length >= 20 &&
-                sentence.length <= 650 &&
-                /[a-zA-Z]/.test(sentence)
-            );
-
+            return sentence.length > 25;
         });
-
-    // Remove duplicate sentences.
-    return [...new Set(sentences)];
 }
 
 
 /* =========================================
-   15. FIND IMPORTANT SENTENCES
+   15. EXTRACT KEYWORDS
 ========================================= */
 
-function rankSentences(sentences) {
+function extractKeywords(text) {
 
-    const keywords = [
-        "definition",
-        "define",
-        "concept",
-        "important",
-        "advantages",
-        "disadvantages",
-        "characteristics",
-        "features",
-        "types",
-        "classification",
-        "difference",
-        "compare",
-        "working",
-        "process",
-        "method",
-        "algorithm",
-        "architecture",
-        "structure",
-        "implementation",
-        "function",
-        "management",
-        "system",
-        "example",
-        "application",
-        "purpose",
-        "principle",
-        "mechanism",
-        "components",
-        "steps",
-        "operation",
-        "memory",
-        "network",
-        "database",
-        "security"
+    const stopWords = [
+        "about", "above", "after", "again", "against",
+        "also", "among", "because", "before", "being",
+        "below", "between", "both", "could", "does",
+        "doing", "during", "each", "from", "further",
+        "have", "having", "here", "into", "itself",
+        "more", "most", "other", "over", "same",
+        "should", "some", "such", "than", "that",
+        "their", "them", "then", "there", "these",
+        "they", "this", "those", "through", "under",
+        "until", "very", "what", "when", "where",
+        "which", "while", "with", "would", "your",
+        "the", "and", "for", "are", "was", "were",
+        "you", "has", "had", "can", "will", "its",
+        "not", "but", "all", "any", "our", "out",
+        "use", "used", "using", "one", "two", "three"
     ];
 
-    return sentences
-        .map(function (sentence, index) {
+    const words = cleanExtractedText(text)
+        .toLowerCase()
+        .match(/[a-z][a-z0-9-]{3,}/g) || [];
 
-            let score = 0;
+    const frequency = {};
 
-            const lowerSentence = sentence.toLowerCase();
+    words.forEach(function (word) {
 
-            keywords.forEach(function (keyword) {
+        if (stopWords.includes(word)) {
+            return;
+        }
 
-                if (lowerSentence.includes(keyword)) {
-                    score += 2;
-                }
+        frequency[word] = (frequency[word] || 0) + 1;
 
-            });
+    });
 
-            // Prefer sentences with useful explanatory detail.
-            if (sentence.length > 55) {
-                score += 1;
-            }
-
-            if (sentence.length > 100) {
-                score += 1;
-            }
-
-            // Slightly penalize extremely long sentences.
-            if (sentence.length > 300) {
-                score -= 2;
-            }
-
-            return {
-                sentence: sentence,
-                score: score,
-                originalIndex: index
-            };
-
-        })
+    return Object.keys(frequency)
         .sort(function (a, b) {
+            return frequency[b] - frequency[a];
+        })
+        .slice(0, 30);
+}
 
-            if (b.score !== a.score) {
-                return b.score - a.score;
+
+/* =========================================
+   16. GET IMPORTANT SENTENCES
+========================================= */
+
+function getImportantSentences(text, limit) {
+
+    const sentences = splitIntoSentences(text);
+
+    const keywords = extractKeywords(text);
+
+    const scoredSentences = sentences.map(function (sentence) {
+
+        const lowerSentence = sentence.toLowerCase();
+
+        let score = 0;
+
+        keywords.forEach(function (keyword) {
+
+            if (lowerSentence.includes(keyword)) {
+                score++;
             }
 
-            return a.originalIndex - b.originalIndex;
+        });
 
-        })
+        return {
+            sentence: sentence,
+            score: score
+        };
+
+    });
+
+    scoredSentences.sort(function (a, b) {
+        return b.score - a.score;
+    });
+
+    return scoredSentences
+        .slice(0, limit)
         .map(function (item) {
-
             return item.sentence;
-
         });
 }
 
 
 /* =========================================
-   16. GET A SOURCE SENTENCE
+   17. CREATE SHORT QUESTION
 ========================================= */
 
-function getSourceSentence(sentences, index) {
+function createShortQuestion(sentence, index) {
 
-    if (!sentences.length) {
-        return "";
-    }
+    const cleanedSentence = sentence
+        .replace(/[.!?]+$/, "")
+        .trim();
 
-    return sentences[index % sentences.length];
-}
-
-
-/* =========================================
-   17. CREATE 1-MARK QUESTIONS
-========================================= */
-
-function createOneMarkQuestion(sentence, index) {
-
-    const patterns = [
-
-        function (text) {
-            return "Define the key concept discussed in: " + text;
-        },
-
-        function (text) {
-            return "What is the main idea explained in: " + text;
-        },
-
-        function (text) {
-            return "State the meaning of the concept described in: " + text;
-        },
-
-        function (text) {
-            return "Identify the important concept in: " + text;
-        },
-
-        function (text) {
-            return "State one important fact explained in: " + text;
-        }
-
+    const templates = [
+        "Define and explain: " + cleanedSentence + ".",
+        "What do you understand by " + cleanedSentence + "?",
+        "Write a short note on " + cleanedSentence + ".",
+        "Explain the meaning of " + cleanedSentence + ".",
+        "State the important points related to " + cleanedSentence + "."
     ];
 
-    const pattern = patterns[index % patterns.length];
-
-    return pattern(sentence);
+    return templates[index % templates.length];
 }
 
 
 /* =========================================
-   18. CREATE 5-MARK QUESTIONS
+   18. CREATE MEDIUM QUESTION
 ========================================= */
 
-function createFiveMarkQuestion(sentence, index) {
+function createMediumQuestion(sentence, index) {
 
-    const patterns = [
+    const cleanedSentence = sentence
+        .replace(/[.!?]+$/, "")
+        .trim();
 
-        function (text) {
-            return "Explain the concept described below with a suitable example: " + text;
-        },
-
-        function (text) {
-            return "Describe the important features of the concept discussed in: " + text;
-        },
-
-        function (text) {
-            return "Explain the working or process described in: " + text;
-        },
-
-        function (text) {
-            return "Discuss the main points and applications related to: " + text;
-        },
-
-        function (text) {
-            return "Explain the significance of the following concept: " + text;
-        }
-
+    const templates = [
+        "Explain " + cleanedSentence + " with a suitable example.",
+        "Describe the concept of " + cleanedSentence + " in detail.",
+        "Discuss the important features of " + cleanedSentence + ".",
+        "Explain the working and importance of " + cleanedSentence + ".",
+        "Write a detailed note on " + cleanedSentence + "."
     ];
 
-    return patterns[index % patterns.length](sentence);
+    return templates[index % templates.length];
 }
 
 
 /* =========================================
-   19. CREATE 7-MARK QUESTIONS
+   19. CREATE LONG QUESTION
 ========================================= */
 
-function createSevenMarkQuestion(sentence, index) {
+function createLongQuestion(sentence, index) {
 
-    const patterns = [
+    const cleanedSentence = sentence
+        .replace(/[.!?]+$/, "")
+        .trim();
 
-        function (text) {
-            return "Explain the concept in detail with its working, a suitable example and a diagram where applicable: " + text;
-        },
-
-        function (text) {
-            return "Discuss the concept in detail. Explain its features, applications and limitations: " + text;
-        },
-
-        function (text) {
-            return "Describe the process step by step, with an example and a suitable diagram where applicable: " + text;
-        },
-
-        function (text) {
-            return "Explain the principle, working and practical applications of the concept described in: " + text;
-        },
-
-        function (text) {
-            return "Write a detailed note on the following topic, including its components, working and advantages: " + text;
-        }
-
+    const templates = [
+        "Explain " + cleanedSentence + " in detail with a neat diagram and suitable example.",
+        "Discuss " + cleanedSentence + ". Explain its types, features and applications.",
+        "Describe the complete concept of " + cleanedSentence + " with its advantages and limitations.",
+        "Explain the working, structure and importance of " + cleanedSentence + " in detail.",
+        "Write a detailed explanation of " + cleanedSentence + " with suitable examples."
     ];
 
-    return patterns[index % patterns.length](sentence);
+    return templates[index % templates.length];
 }
 
 
 /* =========================================
-   20. GENERATE EXACTLY 70 MARKS
+   20. GENERATE QUESTION PAPER
 ========================================= */
-
-/*
-    Question Paper Pattern:
-
-    Section A:
-    10 questions × 1 mark = 10 marks
-
-    Section B:
-    5 questions × 5 marks = 25 marks
-
-    Section C:
-    5 questions × 7 marks = 35 marks
-
-    Total = 70 marks
-*/
 
 function generateQuestionPaper(text) {
 
     const sentences = splitIntoSentences(text);
 
-    if (sentences.length < 5) {
-
+    if (sentences.length < 3) {
         throw new Error(
-            "The PDF contains too little readable text. " +
-            "Please upload a more detailed chapter PDF."
+            "Not enough readable text was found in this PDF. Please upload a text-based PDF with more chapter content."
         );
-
     }
 
-    const rankedSentences = rankSentences(sentences);
+    const importantSentences = getImportantSentences(
+        text,
+        25
+    );
 
-    const oneMarkQuestions = [];
+    const sourceSentences = importantSentences.length >= 10
+        ? importantSentences
+        : sentences;
 
-    const fiveMarkQuestions = [];
+    const shortQuestions = [];
+    const mediumQuestions = [];
+    const longQuestions = [];
 
-    const sevenMarkQuestions = [];
-
-
-    // Generate 10 questions of 1 mark each.
     for (let i = 0; i < 10; i++) {
 
-        const sentence = getSourceSentence(
-            rankedSentences,
-            i
+        const sentence = sourceSentences[
+            i % sourceSentences.length
+        ];
+
+        shortQuestions.push(
+            createShortQuestion(sentence, i)
         );
-
-        oneMarkQuestions.push({
-            question: createOneMarkQuestion(sentence, i),
-            marks: 1
-        });
-
     }
 
-
-    // Generate 5 questions of 5 marks each.
     for (let i = 0; i < 5; i++) {
 
-        const sentence = getSourceSentence(
-            rankedSentences,
-            10 + i
+        const sentence = sourceSentences[
+            (i + 10) % sourceSentences.length
+        ];
+
+        mediumQuestions.push(
+            createMediumQuestion(sentence, i)
         );
-
-        fiveMarkQuestions.push({
-            question: createFiveMarkQuestion(sentence, i),
-            marks: 5
-        });
-
     }
 
-
-    // Generate 5 questions of 7 marks each.
     for (let i = 0; i < 5; i++) {
 
-        const sentence = getSourceSentence(
-            rankedSentences,
-            15 + i
+        const sentence = sourceSentences[
+            (i + 15) % sourceSentences.length
+        ];
+
+        longQuestions.push(
+            createLongQuestion(sentence, i)
         );
-
-        sevenMarkQuestions.push({
-            question: createSevenMarkQuestion(sentence, i),
-            marks: 7
-        });
-
     }
-
 
     return {
-        oneMark: oneMarkQuestions,
-        fiveMark: fiveMarkQuestions,
-        sevenMark: sevenMarkQuestions,
-        totalMarks: 70,
-        sourceSentences: rankedSentences
+        shortQuestions: shortQuestions,
+        mediumQuestions: mediumQuestions,
+        longQuestions: longQuestions,
+        totalMarks: 70
     };
 }
 
 
 /* =========================================
-   21. FORMAT QUESTIONS AS TEXT
+   21. FORMAT QUESTION PAPER
 ========================================= */
 
-function formatQuestionsAsText(paper) {
+function formatQuestionPaper(paper) {
 
     let output = "";
 
-    output += "SECTION A: SHORT QUESTIONS\n";
-    output += "10 Questions × 1 Mark = 10 Marks\n\n";
+    output += "GTU ASSIGNMENT QUESTION PAPER\n";
+    output += "========================================\n\n";
 
-    paper.oneMark.forEach(function (item, index) {
+    output += "Q.1 Answer the following questions. (10 × 1 = 10 Marks)\n\n";
 
-        output +=
-            (index + 1) +
-            ". " +
-            item.question +
-            " [" +
-            item.marks +
-            " Mark]\n";
-
+    paper.shortQuestions.forEach(function (question, index) {
+        output += (index + 1) + ". " + question + " (1 Mark)\n";
     });
 
+    output += "\n\nQ.2 Answer the following questions. (5 × 5 = 25 Marks)\n\n";
 
-    output += "\nSECTION B: MEDIUM QUESTIONS\n";
-    output += "5 Questions × 5 Marks = 25 Marks\n\n";
-
-    paper.fiveMark.forEach(function (item, index) {
-
-        output +=
-            (index + 11) +
-            ". " +
-            item.question +
-            " [" +
-            item.marks +
-            " Marks]\n";
-
+    paper.mediumQuestions.forEach(function (question, index) {
+        output += (index + 1) + ". " + question + " (5 Marks)\n";
     });
 
+    output += "\n\nQ.3 Answer the following questions. (5 × 7 = 35 Marks)\n\n";
 
-    output += "\nSECTION C: LONG QUESTIONS\n";
-    output += "5 Questions × 7 Marks = 35 Marks\n\n";
-
-    paper.sevenMark.forEach(function (item, index) {
-
-        output +=
-            (index + 16) +
-            ". " +
-            item.question +
-            " [" +
-            item.marks +
-            " Marks]\n";
-
+    paper.longQuestions.forEach(function (question, index) {
+        output += (index + 1) + ". " + question + " (7 Marks)\n";
     });
 
-
-    output += "\nTOTAL MARKS: 70\n";
+    output += "\n\n========================================\n";
+    output += "TOTAL MARKS: 70\n";
 
     return output;
 }
 
 
 /* =========================================
-   22. DISPLAY QUESTION PREVIEW
-========================================= */
-
-function renderQuestionPreview(paper) {
-
-    questionGroups.replaceChildren();
-
-    // Section A.
-    renderQuestionGroup(
-        "SECTION A — SHORT QUESTIONS",
-        "10 Questions × 1 Mark = 10 Marks",
-        paper.oneMark
-    );
-
-    // Section B.
-    renderQuestionGroup(
-        "SECTION B — MEDIUM QUESTIONS",
-        "5 Questions × 5 Marks = 25 Marks",
-        paper.fiveMark
-    );
-
-    // Section C.
-    renderQuestionGroup(
-        "SECTION C — LONG QUESTIONS",
-        "5 Questions × 7 Marks = 35 Marks",
-        paper.sevenMark
-    );
-
-    document.getElementById("previewMarks").textContent =
-        paper.totalMarks;
-
-    questionsTextarea.value =
-        formatQuestionsAsText(paper);
-
-    questionPreview.classList.remove("hidden");
-}
-
-
-// Build a question section safely using textContent.
-function renderQuestionGroup(title, subtitle, questions) {
-
-    const section = document.createElement("div");
-
-    section.className = "question-group";
-
-    const heading = document.createElement("h3");
-
-    heading.textContent = title;
-
-    section.appendChild(heading);
-
-    const description = document.createElement("p");
-
-    description.textContent = subtitle;
-
-    description.style.fontSize = "12px";
-    description.style.color = "#8589a3";
-    description.style.marginBottom = "12px";
-
-    section.appendChild(description);
-
-    const list = document.createElement("ol");
-
-    questions.forEach(function (item) {
-
-        const listItem = document.createElement("li");
-
-        listItem.textContent = item.question + " ";
-
-        const marks = document.createElement("span");
-
-        marks.className = "question-mark";
-
-        marks.textContent =
-            "(" + item.marks + " marks)";
-
-        listItem.appendChild(marks);
-
-        list.appendChild(listItem);
-
-    });
-
-    section.appendChild(list);
-
-    questionGroups.appendChild(section);
-}
-
-
-/* =========================================
-   23. GENERATE QUESTIONS BUTTON
+   22. GENERATE QUESTIONS FROM PDF
 ========================================= */
 
 generateBtn.addEventListener("click", async function () {
@@ -1177,28 +1011,25 @@ generateBtn.addEventListener("click", async function () {
 
         showMessage(
             generationStatus,
-            "Please upload your chapter PDF first.",
+            "Please select a PDF file first.",
             "error"
         );
-
-        chapterFile.focus();
 
         return;
     }
 
-    const subject = document
-        .getElementById("subject")
-        .value;
+    const facultyName = document.getElementById("facultyName").value.trim();
+    const program = document.getElementById("program").value;
+    const semester = document.getElementById("semester").value;
+    const subject = document.getElementById("subject").value;
+    const chapter = document.getElementById("chapter").value.trim();
+    const title = document.getElementById("assignmentTitle").value.trim();
 
-    const chapter = document
-        .getElementById("chapter")
-        .value.trim();
-
-    if (!subject || !chapter) {
+    if (!facultyName || !program || !semester || !subject || !chapter || !title) {
 
         showMessage(
             generationStatus,
-            "Please select a subject and enter the chapter name.",
+            "Please complete all assignment information before generating questions.",
             "error"
         );
 
@@ -1209,20 +1040,26 @@ generateBtn.addEventListener("click", async function () {
 
     generateBtn.disabled = true;
 
-    generateBtn.textContent = "⏳ Reading PDF...";
+    generateBtn.textContent = "⏳ Generating Questions...";
+
+    showMessage(
+        generationStatus,
+        "Reading PDF and preparing questions. Please wait...",
+        "success"
+    );
 
     try {
 
-        // Read the PDF.
         extractedText = await extractPDFText(file);
 
-        showMessage(
-            generationStatus,
-            "PDF text extracted. Preparing questions...",
-            "info"
-        );
+        if (!extractedText || extractedText.length < 100) {
 
-        // Generate questions from extracted text.
+            throw new Error(
+                "Very little text was found in the PDF. Please use a text-based PDF."
+            );
+
+        }
+
         generatedPaper = generateQuestionPaper(
             extractedText
         );
@@ -1231,15 +1068,23 @@ generateBtn.addEventListener("click", async function () {
 
         selectedFileName = file.name;
 
-        // Display the paper.
-        renderQuestionPreview(generatedPaper);
+        questionsTextarea.value =
+            formatQuestionPaper(generatedPaper);
+
+        displayQuestionGroups(generatedPaper);
+
+        questionPreview.classList.remove("hidden");
 
         showMessage(
             generationStatus,
-            "Generated 20 questions with a total of 70 marks. " +
-            "Please review the questions before saving.",
+            "Questions generated successfully! Review them before saving.",
             "success"
         );
+
+        questionPreview.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
 
     } catch (error) {
 
@@ -1247,8 +1092,7 @@ generateBtn.addEventListener("click", async function () {
 
         showMessage(
             generationStatus,
-            error.message ||
-            "Unable to generate questions. Please try another PDF.",
+            error.message || "Could not generate questions. Please try again.",
             "error"
         );
 
@@ -1258,12 +1102,74 @@ generateBtn.addEventListener("click", async function () {
 
         generateBtn.disabled = false;
 
-        generateBtn.textContent =
-            "✨ Generate 70 Marks Questions";
+        generateBtn.textContent = "✨ Generate 70 Marks Questions";
 
     }
 
 });
+
+
+/* =========================================
+   23. DISPLAY GENERATED QUESTION GROUPS
+========================================= */
+
+function displayQuestionGroups(paper) {
+
+    questionGroups.replaceChildren();
+
+    const groups = [
+        {
+            title: "Section A — 1 Mark Questions",
+            questions: paper.shortQuestions,
+            marks: "10 Marks"
+        },
+        {
+            title: "Section B — 5 Mark Questions",
+            questions: paper.mediumQuestions,
+            marks: "25 Marks"
+        },
+        {
+            title: "Section C — 7 Mark Questions",
+            questions: paper.longQuestions,
+            marks: "35 Marks"
+        }
+    ];
+
+    groups.forEach(function (group) {
+
+        const groupElement = document.createElement("div");
+
+        groupElement.className = "question-group";
+
+        const heading = document.createElement("h3");
+
+        heading.textContent =
+            group.title + " (" + group.marks + ")";
+
+        groupElement.appendChild(heading);
+
+        const list = document.createElement("ol");
+
+        group.questions.forEach(function (question) {
+
+            const item = document.createElement("li");
+
+            item.textContent = question;
+
+            list.appendChild(item);
+
+        });
+
+        groupElement.appendChild(list);
+
+        questionGroups.appendChild(groupElement);
+
+    });
+
+    document.getElementById("previewMarks").textContent =
+        paper.totalMarks;
+
+}
 
 
 /* =========================================
@@ -1276,7 +1182,7 @@ regenerateBtn.addEventListener("click", function () {
 
         showMessage(
             generationStatus,
-            "Upload and read a PDF first.",
+            "Please upload and read a PDF first.",
             "error"
         );
 
@@ -1285,16 +1191,18 @@ regenerateBtn.addEventListener("click", function () {
 
     try {
 
-        // Rebuild the paper from the same PDF text.
         generatedPaper = generateQuestionPaper(
             extractedText
         );
 
-        renderQuestionPreview(generatedPaper);
+        questionsTextarea.value =
+            formatQuestionPaper(generatedPaper);
+
+        displayQuestionGroups(generatedPaper);
 
         showMessage(
             generationStatus,
-            "Questions regenerated. Review them before saving.",
+            "A new question set has been generated.",
             "success"
         );
 
@@ -1326,85 +1234,11 @@ assignmentForm.addEventListener("submit", function (event) {
         return;
     }
 
-    if (!generatedPaper || !extractedText) {
+    if (!generatedPaper || !questionsTextarea.value.trim()) {
 
         showMessage(
             generationStatus,
-            "Generate questions from your PDF before saving.",
-            "error"
-        );
-
-        return;
-    }
-
-    const facultyName = document
-        .getElementById("facultyName")
-        .value.trim();
-
-    const program = document
-        .getElementById("program")
-        .value;
-
-    const semester = document
-        .getElementById("semester")
-        .value;
-
-    const subject = document
-        .getElementById("subject")
-        .value;
-
-    const chapter = document
-        .getElementById("chapter")
-        .value.trim();
-
-    const title = document
-        .getElementById("assignmentTitle")
-        .value.trim();
-
-    const dueDate = document
-        .getElementById("dueDate")
-        .value;
-
-    const description = document
-        .getElementById("description")
-        .value.trim();
-
-    const questionText = questionsTextarea.value.trim();
-
-    if (
-        !facultyName ||
-        !program ||
-        !semester ||
-        !subject ||
-        !chapter ||
-        !title ||
-        !dueDate ||
-        !questionText
-    ) {
-
-        showMessage(
-            generationStatus,
-            "Please complete all required fields.",
-            "error"
-        );
-
-        return;
-    }
-
-    // Do not save an expired submission date.
-    const today = new Date();
-
-    today.setHours(0, 0, 0, 0);
-
-    const selectedDate = new Date(
-        dueDate + "T00:00:00"
-    );
-
-    if (selectedDate < today) {
-
-        showMessage(
-            generationStatus,
-            "Please choose today or a future submission date.",
+            "Generate the question paper before saving.",
             "error"
         );
 
@@ -1413,39 +1247,52 @@ assignmentForm.addEventListener("submit", function (event) {
 
     const assignment = {
 
-        id: createID(),
+        id: Date.now().toString(),
 
-        facultyName: facultyName,
+        facultyName: document
+            .getElementById("facultyName")
+            .value.trim(),
 
         facultyEmail: currentFaculty.email,
 
-        program: program,
+        program: document
+            .getElementById("program")
+            .value,
 
-        semester: semester,
+        semester: document
+            .getElementById("semester")
+            .value,
 
-        subject: subject,
+        subject: document
+            .getElementById("subject")
+            .value,
 
-        chapter: chapter,
+        chapter: document
+            .getElementById("chapter")
+            .value.trim(),
 
-        title: title,
+        title: document
+            .getElementById("assignmentTitle")
+            .value.trim(),
 
-        dueDate: dueDate,
+        dueDate: document
+            .getElementById("dueDate")
+            .value,
 
-        description: description,
+        description: document
+            .getElementById("description")
+            .value.trim(),
 
-        fileName: generatedFromFile || selectedFileName,
+        fileName: selectedFileName,
 
-        questions: questionText,
+        questions: questionsTextarea.value.trim(),
 
         totalMarks: 70,
-
-        questionCount: 20,
 
         createdAt: new Date().toISOString()
 
     };
 
-    // Save assignment.
     const allAssignments = getAllAssignments();
 
     allAssignments.unshift(assignment);
@@ -1465,32 +1312,11 @@ assignmentForm.addEventListener("submit", function (event) {
         "success"
     );
 
-    alert("Assignment created and saved successfully!");
-
-    // Reset the form.
     assignmentForm.reset();
 
-    extractedText = "";
-
-    generatedPaper = null;
-
-    generatedFromFile = null;
-
-    selectedFileName = "";
-
-    fileName.textContent = "No file selected";
-
-    questionPreview.classList.add("hidden");
-
-    // Restore the faculty defaults.
-    document.getElementById("facultyName").value =
-        currentFaculty.name;
-
-    document.getElementById("subject").value =
-        currentFaculty.subject;
-
-    // Update the dashboard.
     renderDashboard();
+
+    renderAssignments();
 
     showSection("assignments");
 
@@ -1498,34 +1324,10 @@ assignmentForm.addEventListener("submit", function (event) {
 
 
 /* =========================================
-   26. CREATE UNIQUE ID
-========================================= */
-
-function createID() {
-
-    if (
-        window.crypto &&
-        typeof window.crypto.randomUUID === "function"
-    ) {
-        return window.crypto.randomUUID();
-    }
-
-    return (
-        Date.now().toString(36) +
-        Math.random().toString(36).slice(2)
-    );
-}
-
-
-/* =========================================
-   27. RENDER DASHBOARD
+   26. DASHBOARD STATISTICS
 ========================================= */
 
 function renderDashboard() {
-
-    if (!currentFaculty) {
-        return;
-    }
 
     const assignments = getMyAssignments();
 
@@ -1540,9 +1342,16 @@ function renderDashboard() {
     const totalQuestions = assignments.reduce(
         function (total, assignment) {
 
-            return total + (
-                Number(assignment.questionCount) || 0
-            );
+            const questionCount = String(
+                assignment.questions || ""
+            )
+                .split("\n")
+                .filter(function (line) {
+                    return /^\s*\d+\./.test(line);
+                })
+                .length;
+
+            return total + questionCount;
 
         },
         0
@@ -1572,7 +1381,7 @@ function renderDashboard() {
 
 
 /* =========================================
-   28. RECENT ASSIGNMENTS
+   27. RENDER RECENT ASSIGNMENTS
 ========================================= */
 
 function renderRecentAssignments(assignments) {
@@ -1581,64 +1390,76 @@ function renderRecentAssignments(assignments) {
 
     if (!assignments.length) {
 
-        recentAssignments.appendChild(
-            createEmptyState(
-                "No assignments yet. Create your first assignment!"
-            )
-        );
+        const empty = document.createElement("div");
+
+        empty.className = "empty-state";
+
+        empty.textContent =
+            "No assignments yet. Create your first assignment!";
+
+        recentAssignments.appendChild(empty);
 
         return;
     }
 
-    assignments.slice(0, 3).forEach(function (assignment) {
+    assignments.slice(0, 4).forEach(function (assignment) {
 
-        const item = document.createElement("div");
+        const card = document.createElement("div");
 
-        item.className = "recent-item";
+        card.className = "recent-item";
 
-        const details = document.createElement("div");
+        const info = document.createElement("div");
 
-        const title = document.createElement("h3");
+        info.className = "recent-info";
+
+        const title = document.createElement("strong");
 
         title.textContent = assignment.title;
 
-        const description = document.createElement("p");
+        const detail = document.createElement("small");
 
-        description.textContent =
-            assignment.subject +
-            " · " +
-            assignment.chapter +
-            " · " +
-            assignment.totalMarks +
-            " marks";
+        detail.textContent =
+            assignment.subject + " • " + assignment.chapter;
 
-        details.append(title, description);
+        info.appendChild(title);
+        info.appendChild(detail);
 
-        const button = document.createElement("button");
+        const date = document.createElement("span");
 
-        button.className = "secondary-btn";
+        date.className = "recent-date";
 
-        button.textContent = "View";
+        date.textContent = formatDate(assignment.createdAt);
 
-        button.type = "button";
+        card.appendChild(info);
+        card.appendChild(date);
 
-        button.addEventListener("click", function () {
+        recentAssignments.appendChild(card);
 
-            showSection("assignments");
+    });
 
-            // Search for the assignment by its title.
-            searchInput.value = assignment.title;
+}
 
-            filterSubject.value = "";
 
-            renderAssignments();
+/* =========================================
+   28. FORMAT DATE
+========================================= */
 
-        });
+function formatDate(dateValue) {
 
-        item.append(details, button);
+    if (!dateValue) {
+        return "Date not available";
+    }
 
-        recentAssignments.appendChild(item);
+    const date = new Date(dateValue);
 
+    if (Number.isNaN(date.getTime())) {
+        return "Date not available";
+    }
+
+    return date.toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
     });
 
 }
@@ -1650,34 +1471,33 @@ function renderRecentAssignments(assignments) {
 
 function renderAssignments() {
 
-    assignmentList.replaceChildren();
-
     if (!currentFaculty) {
         return;
     }
 
-    const searchText = searchInput.value
+    const assignments = getMyAssignments();
+
+    const searchTerm = searchInput.value
         .trim()
         .toLowerCase();
 
     const selectedSubject = filterSubject.value;
 
-    const filteredAssignments = getMyAssignments()
-        .filter(function (assignment) {
+    const filteredAssignments = assignments.filter(
+        function (assignment) {
 
             const searchableText = [
-
                 assignment.title,
                 assignment.subject,
                 assignment.chapter,
                 assignment.program,
-                assignment.semester,
-                assignment.facultyName
-
-            ].join(" ").toLowerCase();
+                assignment.semester
+            ]
+                .join(" ")
+                .toLowerCase();
 
             const matchesSearch =
-                searchableText.includes(searchText);
+                searchableText.includes(searchTerm);
 
             const matchesSubject =
                 !selectedSubject ||
@@ -1685,118 +1505,29 @@ function renderAssignments() {
 
             return matchesSearch && matchesSubject;
 
-        });
+        }
+    );
+
+    assignmentList.replaceChildren();
 
     if (!filteredAssignments.length) {
 
-        assignmentList.appendChild(
-            createEmptyState(
-                "No assignments found. Try another search or create an assignment."
-            )
-        );
+        const empty = document.createElement("div");
+
+        empty.className = "empty-state";
+
+        empty.textContent = assignments.length
+            ? "No assignments match your search."
+            : "No assignments found. Create your first assignment!";
+
+        assignmentList.appendChild(empty);
 
         return;
     }
 
     filteredAssignments.forEach(function (assignment) {
 
-        const card = document.createElement("article");
-
-        card.className = "assignment-card";
-
-        const badge = document.createElement("span");
-
-        badge.className = "assignment-badge";
-
-        badge.textContent = assignment.subject;
-
-        const title = document.createElement("h3");
-
-        title.textContent = assignment.title;
-
-        const program = createParagraph(
-            "Program: " + assignment.program
-        );
-
-        const semester = createParagraph(
-            "Semester: " + assignment.semester
-        );
-
-        const chapter = createParagraph(
-            "Chapter: " + assignment.chapter
-        );
-
-        const faculty = createParagraph(
-            "Faculty: " + assignment.facultyName
-        );
-
-        const marks = createParagraph(
-            "Total Marks: " + assignment.totalMarks
-        );
-
-        const dueDate = createParagraph(
-            "Submission Date: " + assignment.dueDate
-        );
-
-        const file = createParagraph(
-            "PDF: " + (assignment.fileName || "Not available")
-        );
-
-        const actions = document.createElement("div");
-
-        actions.className = "card-actions";
-
-        const viewButton = createActionButton(
-            "View Questions",
-            "view-btn"
-        );
-
-        const printButton = createActionButton(
-            "Print / PDF",
-            "print-btn"
-        );
-
-        const deleteButton = createActionButton(
-            "Delete",
-            "delete-btn"
-        );
-
-        viewButton.addEventListener("click", function () {
-
-            showSavedQuestions(assignment);
-
-        });
-
-        printButton.addEventListener("click", function () {
-
-            printAssignment(assignment);
-
-        });
-
-        deleteButton.addEventListener("click", function () {
-
-            deleteAssignment(assignment.id);
-
-        });
-
-        actions.append(
-            viewButton,
-            printButton,
-            deleteButton
-        );
-
-        card.append(
-            badge,
-            title,
-            program,
-            semester,
-            chapter,
-            faculty,
-            marks,
-            dueDate,
-            file,
-            actions
-        );
+        const card = createAssignmentCard(assignment);
 
         assignmentList.appendChild(card);
 
@@ -1806,55 +1537,127 @@ function renderAssignments() {
 
 
 /* =========================================
-   30. CREATE PARAGRAPH
+   30. CREATE ASSIGNMENT CARD
 ========================================= */
 
-function createParagraph(text) {
+function createAssignmentCard(assignment) {
 
-    const paragraph = document.createElement("p");
+    const card = document.createElement("article");
 
-    paragraph.textContent = text;
+    card.className = "assignment-card";
 
-    return paragraph;
+    const header = document.createElement("div");
+
+    header.className = "assignment-card-header";
+
+    const titleArea = document.createElement("div");
+
+    const title = document.createElement("h3");
+
+    title.textContent = assignment.title;
+
+    const subject = document.createElement("span");
+
+    subject.className = "assignment-subject";
+
+    subject.textContent = assignment.subject;
+
+    titleArea.appendChild(title);
+    titleArea.appendChild(subject);
+
+    const marks = document.createElement("span");
+
+    marks.className = "assignment-marks";
+
+    marks.textContent =
+        assignment.totalMarks + " Marks";
+
+    header.appendChild(titleArea);
+    header.appendChild(marks);
+
+    const details = document.createElement("div");
+
+    details.className = "assignment-details";
+
+    const detailItems = [
+        ["Program", assignment.program],
+        ["Semester", assignment.semester],
+        ["Chapter", assignment.chapter],
+        ["Submission", formatDate(assignment.dueDate)],
+        ["Created", formatDate(assignment.createdAt)],
+        ["PDF", assignment.fileName || "Not attached"]
+    ];
+
+    detailItems.forEach(function (item) {
+
+        const detail = document.createElement("div");
+
+        detail.className = "detail-item";
+
+        const label = document.createElement("small");
+
+        label.textContent = item[0];
+
+        const value = document.createElement("strong");
+
+        value.textContent = item[1] || "Not specified";
+
+        detail.appendChild(label);
+        detail.appendChild(value);
+
+        details.appendChild(detail);
+
+    });
+
+    const actions = document.createElement("div");
+
+    actions.className = "assignment-actions";
+
+    const viewButton = document.createElement("button");
+
+    viewButton.type = "button";
+    viewButton.className = "secondary-btn";
+    viewButton.textContent = "View Questions";
+
+    viewButton.addEventListener("click", function () {
+        showSavedQuestions(assignment);
+    });
+
+    const printButton = document.createElement("button");
+
+    printButton.type = "button";
+    printButton.className = "secondary-btn";
+    printButton.textContent = "Print";
+
+    printButton.addEventListener("click", function () {
+        printAssignment(assignment);
+    });
+
+    const deleteButton = document.createElement("button");
+
+    deleteButton.type = "button";
+    deleteButton.className = "delete-btn";
+    deleteButton.textContent = "Delete";
+
+    deleteButton.addEventListener("click", function () {
+        deleteAssignment(assignment.id);
+    });
+
+    actions.appendChild(viewButton);
+    actions.appendChild(printButton);
+    actions.appendChild(deleteButton);
+
+    card.appendChild(header);
+    card.appendChild(details);
+    card.appendChild(actions);
+
+    return card;
+
 }
 
 
 /* =========================================
-   31. CREATE ACTION BUTTON
-========================================= */
-
-function createActionButton(text, className) {
-
-    const button = document.createElement("button");
-
-    button.type = "button";
-
-    button.className = className;
-
-    button.textContent = text;
-
-    return button;
-}
-
-
-/* =========================================
-   32. EMPTY STATE
-========================================= */
-
-function createEmptyState(message) {
-
-    const element = document.createElement("div");
-
-    element.className = "empty-state";
-
-    element.textContent = message;
-
-    return element;
-}
-
-
-/* =========================================
-   33. SEARCH AND FILTER
+   31. SEARCH ASSIGNMENTS
 ========================================= */
 
 searchInput.addEventListener("input", function () {
@@ -1863,9 +1666,28 @@ searchInput.addEventListener("input", function () {
 
 });
 
+
+/* =========================================
+   32. FILTER ASSIGNMENTS
+========================================= */
+
 filterSubject.addEventListener("change", function () {
 
     renderAssignments();
+
+});
+
+
+/* =========================================
+   33. REFRESH ASSIGNMENTS
+========================================= */
+
+document.addEventListener("visibilitychange", function () {
+
+    if (!document.hidden && currentFaculty) {
+        renderAssignments();
+        renderDashboard();
+    }
 
 });
 
@@ -1974,7 +1796,6 @@ function showSavedQuestions(assignment) {
         assignment.questions
     );
 
-    // Display the saved paper in a new window for reading.
     const paperWindow = window.open(
         "",
         "_blank",
@@ -2055,7 +1876,6 @@ function printAssignment(assignment) {
 
 function createPrintableHTML(assignment) {
 
-    // Escape user-provided content before using HTML.
     const escapeHTML = function (value) {
 
         return String(value ?? "")
@@ -2321,7 +2141,6 @@ function addPrintQuestions(container, text) {
 
 assignmentForm.addEventListener("reset", function () {
 
-    // Clear temporary generated data.
     extractedText = "";
 
     generatedPaper = null;
@@ -2330,7 +2149,6 @@ assignmentForm.addEventListener("reset", function () {
 
     selectedFileName = "";
 
-    // Reset the question preview.
     questionPreview.classList.add("hidden");
 
     questionGroups.replaceChildren();
